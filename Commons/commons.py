@@ -67,12 +67,57 @@ def calculate_QR(A):
                 Q[j,c2] = Qq[1,c2]
     return (Q.H,R)
 
+# http://web.stanford.edu/class/cme335/lecture5
+def calculate_DSQR(A):
+    max_iterations = 50
+    convergence = 0.0001
+    eigenvalues = [];
+    n = A.shape[0] # n --> rows
+    H = np.matrix(A)
+    while not n < 2:
+        for i in range(0,max_iterations):
+            (Q,R) = calculate_QR(H)
+            H = R*Q
+            if np.absolute(H[n-1,n-2]) < convergence:
+                eigenvalues.insert(len(eigenvalues),H[n-1,n-1])
+                aux = range(0,n-1)
+                H = H[np.ix_(aux,aux)]
+                n = n - 1
+                break
+
+            if i == max_iterations:
+                aux2 = range(n-2,n)
+                submatrix = H[np.ix_(aux2,aux2)]
+                b = -1 * (submatrix[0,0] + submatrix[1,1]);
+                c = (submatrix(0,0) * submatrix(1,1)) - (submatrix(1,2) * submatrix(2,1))
+
+                d = b**2 - 4*c
+                if d >= 0:
+                    eigenvalues.insert(len(eigenvalues), (-1*b + np.sqrt(d)) / 2)
+                    eigenvalues.insert(len(eigenvalues), (-1*b - np.sqrt(d)) / 2)
+                else:
+                    eigenvalues.insert(len(eigenvalues), (-1*b/2 + np.sqrt(d*-1))*j/2)
+                    eigenvalues.insert(len(eigenvalues), (-1*b/2 - np.sqrt(d*-1))*j/2)
+
+                aux3 = range(0,n-2)
+                H = H[np.ix_(aux3,aux3)]
+                n = n-2
+
+    eigenvalues.insert(len(eigenvalues), A[0,0])
+    return np.matrix(eigenvalues)
+
+def calculate_eigenvalues(A):
+    if (A.shape[0] == A.H.shape[0]):
+        H = calculate_hessenberg(A)
+        return calculate_DSQR(H).H
+    else:
+        print("Error: You should provide a square matrix")
+
 def main():
     A = np.matrix('1.,2.,3.,4.;-1.,-2.,-3.,-4.;5,6,7,8;9,0,1,2')
     #print(calculate_hessenberg(A))
-    (Q,R) = calculate_QR(A)
-    print(Q)
-    print(R)
+    #(Q,R) = calculate_QR(A)
+    print(calculate_eigenvalues(A))
 
 if __name__ == "__main__":
     main()
