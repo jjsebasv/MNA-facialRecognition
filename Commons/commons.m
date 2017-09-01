@@ -1,7 +1,8 @@
 function [Q,R] = calculateHQR (A)
+% NOT WORKING
 % http://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-	[m,n] = size(A);
-	Q = eye(m);
+	n = size(A);
+	Q = eye(n);
 	R = A;
 	for j = 1:n
 		normx = norm(R(j:end,j));
@@ -16,7 +17,7 @@ function [Q,R] = calculateHQR (A)
 end
 
 function H = calculateHessenberg(A)
-	[m,n] = size(A); 
+	[m,n] = size(A);
 	L = zeros(m,n);
 	H = A;
 	for j = 1:m-2
@@ -72,14 +73,15 @@ function ANS = calculateEigenvalues(A)
   tic;
   if (rows(A) == columns(A))
     A = hessenberg(A);
-    ANS = transpose(customDoubleShiftQR(A));
+    ANS = transpose(calculateDSQR(A));
   else
     printf ("Error: The given matrix is not squared.\n");
   endif
   toc;
 end
 
-function ANS = customDoubleShiftQR(A)
+function ANS = calculateDSQR(A)
+% http://web.stanford.edu/class/cme335/lecture5
 
   max_iterations = 50;
   convergence = 0.0001;
@@ -123,9 +125,3 @@ function ANS = customDoubleShiftQR(A)
   ANS = eigenvalues;
 
 end
-
-function E = eig2p2 (A)
-	p = [ 1 , -A(1,1)-A(2,2) , A(1,1)*A(2,2) - A(1,2)*A(2,1) ];
-	E = roots(p);
-end
-
