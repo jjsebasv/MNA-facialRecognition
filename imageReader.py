@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 from pathlib import Path
 
-def getTrainingFaces():
+def get_training_faces():
     trainingFaces = []
     imagesList = Path("images").glob('**/*.pgm')
 
@@ -15,7 +15,7 @@ def getTrainingFaces():
         print(imageMatrixReshaped.shape)
 
 def main():
-    getTrainingFaces()
+    get_training_faces()
 
 if __name__ == "__main__":
     main()
