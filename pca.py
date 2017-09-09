@@ -1,8 +1,10 @@
 import numpy as np
 from utils import calculate_eigenvalues
 
+
 def covariance_matrix(A):
     return np.cov(np.vstack([A]))
+
 
 def pca(A):
     print('Running pca\n')
