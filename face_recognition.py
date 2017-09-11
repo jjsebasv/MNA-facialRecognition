@@ -30,5 +30,5 @@ def calculate_face_vectors(images):
     dim = np.shape(images)
     face_vectors = np.empty((dim[0], dim[1] * dim[2]))
     for i in range(0, dim[0]):
-        face_vectors[i] = matrix_to_vector(images[i]);
+        face_vectors[i] = matrix_to_vector(images[i])
     return face_vectors

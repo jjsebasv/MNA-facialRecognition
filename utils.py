@@ -11,11 +11,11 @@ def as_row_matrix(A):
     return mat
 
 def matrix_to_vector(matrix):
-    return np.reshape(matrix, 92 * 112)
+    return np.reshape(matrix, 92 * 112).astype(np.uint8)
 
 
 def vector_to_matix(face_vector):
-    return face_vector.reshape((112, 92))
+    return face_vector.reshape((112, 92)).astype(np.uint8)
 
 
 def show_image(image_matrix):
