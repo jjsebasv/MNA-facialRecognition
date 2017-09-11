@@ -17,6 +17,7 @@ def main():
     else:
         S = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
 
+    # Antes no estaba ese if, y calculaba la cov de face_vectors_minus_avg.transpose() --> Tabla de 10304*10304
     covariance_matrix = np.matrix(np.cov(S))
     eig = calculate_eigenvalues(covariance_matrix)
 
