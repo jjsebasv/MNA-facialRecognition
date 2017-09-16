@@ -1,4 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/
 TP1 Facial Recognition.iml
-*.pyc 
+*.pyc
+.DS_Store
+facespca.py 
