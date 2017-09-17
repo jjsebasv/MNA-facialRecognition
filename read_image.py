@@ -1,4 +1,5 @@
-# Import Pillow:
+# Code based on https://gist.github.com/sigilioso/2957026
+
 from PIL import Image
 from pathlib import Path
 
