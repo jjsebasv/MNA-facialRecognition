@@ -12,7 +12,7 @@ PIXELS_V = 112
 def get_training_faces(subject):
     c = 0
     A, y = [], []
-    images_list = Path("images/"+ subject).glob('**/*.pgm')
+    images_list = Path("images/"+ subject).glob('**/*.PGM')
 
     for image in images_list:
         if c > 6:
@@ -27,7 +27,7 @@ def get_training_faces(subject):
 def get_test_faces(subject):
     c = 0
     A, y = [], []
-    images_list = Path("images/"+ subject).glob('**/*.pgm')
+    images_list = Path("images/"+ subject).glob('**/*.PGM')
 
     for image in images_list:
         if c > 6:
