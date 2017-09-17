@@ -86,27 +86,22 @@ def training_set_gamma_vectors():
         test_face_vectors = calculate_face_vectors(test_faces)
         test_images[i] = test_face_vectors
 
-    show_image(vector_to_matix(average_face_vect))
-
     test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+
     test_face_vectors_minus_avg = np.empty((test_images.shape[0], PIXELS_H * PIXELS_V))
     for i in range(test_images.shape[0]):
         test_face_vectors_minus_avg[i] = test_images[i] - average_face_vect
 
-    # if (len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]):
-    #     Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-    #     (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
-    #     print('primer if')
-    # # columnas > filas
-    # else:
-    #     Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-    #     print(Ss.shape)
-    #     (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
-    #     print(eigenvalues)
-    #     eigenvectors = face_vectors_minus_avg.H * eigenvectors
-    #     for i in range(face_vectors_minus_avg.shape[0]):
-    #         print(i)
-    #         eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
+    if (len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]):
+        Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
+        (eigenvalues, eigenvectors) = calculate_eigenvalues(Ss)
+    # columnas > filas
+    else:
+        Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
+        (eigenvalues,eigenvectors) = calculate_eigenvalues(Ss)
+        eigenvectors = face_vectors_minus_avg.transpose() * eigenvectors
+        for i in range(face_vectors_minus_avg.shape[0]):
+            eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
     #
     # idx = np.argsort(-eigenvalues)
     # eigenvalues = eigenvalues[idx]
@@ -115,11 +110,17 @@ def training_set_gamma_vectors():
 
     # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
     # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
-    U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+
+
+    # Esta es la magia que no tenemos que borrar por las dudas
+    #U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+
     # B = V[0:V.shape[0],:]
     #proyecto
-    improy      = np.dot(face_vectors_minus_avg,np.transpose(V))
-    imtstproy   = np.dot(test_face_vectors_minus_avg,np.transpose(V))
+
+    improy      = np.dot(face_vectors_minus_avg,eigenvectors)
+    imtstproy   = np.dot(test_face_vectors_minus_avg,eigenvectors)
+
     person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
     persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
 
@@ -128,9 +129,9 @@ def training_set_gamma_vectors():
     clf = svm.LinearSVC()
     clf.fit(improy,person.ravel())
     accs = clf.score(imtstproy,persontst.ravel())
-    print('Precision con {0} autocaras: {1} %\n'.format(100,accs*100))
+    # print("Precision "+ str(accs * 100) +"\n")
 
-    return clf, average_face_vect, V
+    return clf, average_face_vect, eigenvectors
 
 def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
     vector_eigenfaces = np.empty((IMG_PER_SUBJECT, PIXELS_H * PIXELS_V), dtype="uint8")
@@ -142,8 +143,9 @@ def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
 def parse_query(subject, image, clf, avg_image, V):
     image = np.array(matrix_to_vector(get_test_faces("s"+str(subject))[0][image]))
     diff = image - avg_image
-    improy = np.dot([image], np.transpose(V))
+    improy = np.dot([image], V)
     return clf.predict(improy)
+
 
 #Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
 #Los autvectores y autovalores q calculamos aca mas los autovectores de long 10304. Esos autovectores son los que termina

@@ -131,10 +131,79 @@ def calculate_DSQR(A):
     return (np.matrix(autovectores), np.matrix(eigenvalues))
 
 
+def calculate_givensSinCos(a, b):
+    if b != 0:
+        if np.absolute(b) > np.absolute(a):
+            r = a/b
+            s = 1/np.sqrt(1+np.power(r,2))
+            c = s*r
+        else:
+            r = b/a
+            c = 1/np.sqrt(1+np.power(r,2))
+            s = c*r
+    else:
+        c = 1
+        s = 0
+    return (c,s)
+
+def calculate_givensQR(A):
+    n = A.shape[0] # n --> rows
+    m = A.H.shape[0] # m --> cols
+    Q = np.matrix(diag(n))
+    R = A
+    for j in range (0,m):
+        for i in range (n-1,j,-1):
+            G = diag(n)
+            (c,s) = calculate_givensSinCos( R[i-1,j] , R[i,j])
+            G[i-1,i-1] = c
+            G[i-1, i] = -s
+            G[i, i-1] = s
+            G[i, i] = c
+            Q = Q*G
+            R = Q.H * A
+    return (Q,R)
+
+def iterate_QR (Q,R):
+    max_iteractions = 50
+    flag = False
+    eigvectors = Q
+
+    for i in range (0, max_iteractions):
+        print(".", end="")
+        if not flag:
+            A = Q*R
+        else:
+            A = R*Q
+        flag = not flag
+        Q,R = calculate_givensQR(A)
+        eigvectors = eigvectors * Q
+
+#    print(eigvectors)
+#    print()
+#    print(A)
+#    print()
+#    print(R)
+#    print()
+    return (np.matrix(A), np.matrix(eigvectors))
+
+def get_eigenvalues(A):
+    eigenvalues = []
+    convergence = 0.00001
+
+    for i in range(0,A.shape[0]):
+        value = A.item((i,i)) if abs(A.item((i,i))) > convergence else 0
+        eigenvalues.append(value)
+
+    return eigenvalues
+
 def calculate_eigenvalues(A):
     if (A.shape[0] == A.H.shape[0]):
         H = calculate_hessenberg(A)
-        (vectors, values) = calculate_DSQR(H)
-        return (vectors, values.H)
+        (Q,R) = calculate_givensQR(H)
+        (eigenvalues, eigenvectors) = iterate_QR(Q,R)
+
+        #print(np.linalg.eig(A))
+        #(vectors, values) = calculate_DSQR(H)
+        return (get_eigenvalues(eigenvalues), eigenvectors)
     else:
         print("Error: You should provide a square matrix")
