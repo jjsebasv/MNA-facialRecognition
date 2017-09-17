@@ -3,7 +3,6 @@ from utils import *
 from sklearn import svm
 
 #Subjects
-SUBJECTS = 15
 SUBJECTS = 3
 IMG_PER_SUBJECT = 7
 TEST_IMG_PER_SUBJECT = 3
@@ -111,13 +110,17 @@ def training_set_gamma_vectors():
 
     # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
     # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
-    U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+
+
+    # Esta es la magia que no tenemos que borrar por las dudas
+    #U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+
     # B = V[0:V.shape[0],:]
     #proyecto
 
     improy      = np.dot(face_vectors_minus_avg,eigenvectors)
     imtstproy   = np.dot(test_face_vectors_minus_avg,eigenvectors)
-    
+
     person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
     persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
 
@@ -128,7 +131,7 @@ def training_set_gamma_vectors():
     accs = clf.score(imtstproy,persontst.ravel())
     print('Precision con {0} autocaras: {1} %\n'.format(100,accs*100))
 
-    return clf, average_face_vect, V
+    return clf, average_face_vect, eigenvectors
 
 def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
     vector_eigenfaces = np.empty((IMG_PER_SUBJECT, PIXELS_H * PIXELS_V), dtype="uint8")
@@ -140,7 +143,7 @@ def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
 def parse_query(subject, image, clf, avg_image, V):
     image = np.array(matrix_to_vector(get_test_faces("s"+str(subject))[0][image]))
     diff = image - avg_image
-    improy = np.dot([image], np.transpose(V))
+    improy = np.dot([image], V)
     print(clf.predict(improy))
 
 #Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
