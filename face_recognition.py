@@ -92,13 +92,12 @@ def training_set_gamma_vectors():
 
     if (len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]):
         Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-        (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
-        print('primer if')
+        (eigenvalues, eigenvectors) = calculate_eigenvalues(Ss)
     # columnas > filas
     else:
         Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
         print(Ss.shape)
-        (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
+        (eigenvalues,eigenvectors) = calculate_eigenvalues(Ss)
         print(eigenvalues)
         eigenvectors = face_vectors_minus_avg.H * eigenvectors
         for i in range(face_vectors_minus_avg.shape[0]):
@@ -115,7 +114,7 @@ def training_set_gamma_vectors():
     U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
     # B = V[0:V.shape[0],:]
     #proyecto
-    improy      = np.dot(images,np.transpose(V))
+    improy      = np.dot(images,np.transpose(eigenvectors))
     imtstproy   = np.dot(test_images,np.transpose(V))
     person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
     persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
