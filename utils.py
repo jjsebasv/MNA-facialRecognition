@@ -91,7 +91,7 @@ def calculate_QR(A):
 
 # http://web.stanford.edu/class/cme335/lecture5
 def calculate_DSQR(A):
-    max_iterations = 50
+    max_iterations = 10
     convergence = 0.0001
     eigenvalues = [];
     n = A.shape[0]  # n --> rows

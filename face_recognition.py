@@ -3,7 +3,7 @@ from utils import *
 from sklearn import svm
 
 #Subjects
-SUBJECTS = 40
+SUBJECTS = 10
 IMG_PER_SUBJECT = 7
 TEST_IMG_PER_SUBJECT = 3
 PIXELS_H = 92
@@ -89,6 +89,26 @@ def training_set_gamma_vectors():
 
     test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
     test_face_vectors_minus_avg = np.matrix(test_face_vectors - average_face_vect)
+
+    if (len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]):
+        Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
+        (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
+        print('primer if')
+    # columnas > filas
+    else:
+        Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
+        print(Ss.shape)
+        (eigenvectors, eigenvalues) = calculate_eigenvalues(Ss)
+        print(eigenvalues)
+        eigenvectors = face_vectors_minus_avg.H * eigenvectors
+        for i in range(face_vectors_minus_avg.shape[0]):
+            print(i)
+            eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
+
+    idx = np.argsort(-eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:,idx]
+    eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
 
     # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
     # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
