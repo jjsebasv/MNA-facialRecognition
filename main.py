@@ -3,6 +3,7 @@ from face_recognition import *
 
 def main():
     clf, avg_image, V = training_set_gamma_vectors();
+
     acc = 0
     total = 0
     for i in range(1, 6):
