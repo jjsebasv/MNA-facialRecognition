@@ -96,15 +96,12 @@ def training_set_gamma_vectors():
     # columnas > filas
     else:
         Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-        print(Ss.shape)
         (eigenvalues,eigenvectors) = calculate_eigenvalues(Ss)
-        print(eigenvalues)
-        eigenvectors = face_vectors_minus_avg.H * eigenvectors
+        eigenvectors = face_vectors_minus_avg.transpose() * eigenvectors
         for i in range(face_vectors_minus_avg.shape[0]):
-            print(i)
             eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
 
-    idx = np.argsort(-eigenvalues)
+    idx = np.argsort(eigenvalues)
     eigenvalues = eigenvalues[idx]
     eigenvectors = eigenvectors[:,idx]
     eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
