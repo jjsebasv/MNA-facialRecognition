@@ -3,7 +3,7 @@ from utils import *
 from sklearn import svm
 
 #Subjects
-SUBJECTS = 10
+SUBJECTS = 15
 IMG_PER_SUBJECT = 7
 TEST_IMG_PER_SUBJECT = 3
 PIXELS_H = 92
@@ -101,18 +101,18 @@ def training_set_gamma_vectors():
         for i in range(face_vectors_minus_avg.shape[0]):
             eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
 
-    idx = np.argsort(eigenvalues)
-    eigenvalues = eigenvalues[idx]
-    eigenvectors = eigenvectors[:,idx]
-    eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
+    #idx = np.argsort(-eigenvalues)
+    #eigenvalues = eigenvalues[idx]
+    #eigenvectors = eigenvectors[:,idx]
+    #eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
 
     # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
     # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
     U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
     # B = V[0:V.shape[0],:]
     #proyecto
-    improy      = np.dot(images,np.transpose(eigenvectors))
-    imtstproy   = np.dot(test_images,np.transpose(V))
+    improy      = np.dot(images,eigenvectors)
+    imtstproy   = np.dot(test_images,eigenvectors)
     person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
     persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
 
