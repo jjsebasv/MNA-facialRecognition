@@ -1,7 +1,8 @@
 # Import Pillow:
 from PIL import Image
+from pathlib import Path
 
-def resize_and_crop(img_path, modified_path, size, crop_type='top'):
+def resize_and_crop(img_path, size, crop_type='top'):
     """
     Resize and crop an image to fit the specified size.
     args:
@@ -53,6 +54,12 @@ def resize_and_crop(img_path, modified_path, size, crop_type='top'):
                 Image.ANTIALIAS)
         # If the scale is the same, we do not need to crop
     img = img.convert('RGB')
-    img.save(modified_path)
+    img.save(str(img_path) + ".pgm")
 
-resize_and_crop('test.jpg', 'nowi.pgm', [92, 112], 'middle')
+def get_images_from_files():
+    images_list = Path("webcam_images/").glob('**/*.jpg')
+
+    for image in images_list:
+        resize_and_crop(image, [92, 112], 'middle')
+
+get_images_from_files()
