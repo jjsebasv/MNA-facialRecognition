@@ -86,8 +86,6 @@ def training_set_gamma_vectors():
         test_face_vectors = calculate_face_vectors(test_faces)
         test_images[i] = test_face_vectors
 
-    show_image(vector_to_matix(average_face_vect))
-
     test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
 
     test_face_vectors_minus_avg = np.empty((test_images.shape[0], PIXELS_H * PIXELS_V))
@@ -131,7 +129,7 @@ def training_set_gamma_vectors():
     clf = svm.LinearSVC()
     clf.fit(improy,person.ravel())
     accs = clf.score(imtstproy,persontst.ravel())
-    print('Precision con {0} autocaras: {1} %\n'.format(100,accs*100))
+    # print("Precision "+ str(accs * 100) +"\n")
 
     return clf, average_face_vect, eigenvectors
 
@@ -146,7 +144,7 @@ def parse_query(subject, image, clf, avg_image, V):
     image = np.array(matrix_to_vector(get_test_faces("s"+str(subject))[0][image]))
     diff = image - avg_image
     improy = np.dot([image], V)
-    print(clf.predict(improy))
+    return clf.predict(improy)
 
 
 #Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:

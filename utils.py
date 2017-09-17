@@ -169,7 +169,7 @@ def iterate_QR (Q,R):
     eigvectors = Q
 
     for i in range (0, max_iteractions):
-        print(i)
+        print(".", end="")
         if not flag:
             A = Q*R
         else:

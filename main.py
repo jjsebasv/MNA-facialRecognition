@@ -14,7 +14,7 @@ def main():
             if ans == i:
                 acc += 1
 
-    print(1.0*acc/total)
+    print(float(acc)/total)
 
 
 if __name__ == "__main__":
