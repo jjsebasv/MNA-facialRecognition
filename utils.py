@@ -96,6 +96,8 @@ def calculate_DSQR(A):
     eigenvalues = [];
     n = A.shape[0]  # n --> rows
     H = np.matrix(A)
+    (Q, R) = calculate_QR(H)
+    autovectores = Q
     while not n < 2:
         for i in range(0, max_iterations):
             (Q, R) = calculate_QR(H)
@@ -126,12 +128,13 @@ def calculate_DSQR(A):
                 n = n - 2
 
     eigenvalues.insert(len(eigenvalues), A[0, 0])
-    return np.matrix(eigenvalues)
+    return (np.matrix(autovectores), np.matrix(eigenvalues))
 
 
 def calculate_eigenvalues(A):
     if (A.shape[0] == A.H.shape[0]):
         H = calculate_hessenberg(A)
-        return calculate_DSQR(H).H
+        (vectors, values) = calculate_DSQR(H)
+        return (vectors, values.H)
     else:
         print("Error: You should provide a square matrix")

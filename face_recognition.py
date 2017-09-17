@@ -48,7 +48,9 @@ def calculate_eienfaces(eigenvectors):
 def training_set_gamma_vectors():
     #train_set = np.empty((SUBJECTS, IMG_PER_SUBJECT, PIXELS_V, PIXELS_H), dtype="uint8")
     gamma_vectors_set = np.empty((SUBJECTS, IMG_PER_SUBJECT, IMG_PER_SUBJECT))
+    print(SUBJECTS - 1)
     for i in range(0, SUBJECTS - 1):
+        print(i)
         [training_faces, y] = get_training_faces("s"+ str(i+1))
 
         # cada face_vector es de (1, 112*92) = (1, 10304)
@@ -56,15 +58,35 @@ def training_set_gamma_vectors():
         average_face_vect = average_face_vector(face_vectors)
         face_vectors_minus_avg = np.matrix(face_vectors - average_face_vect)
 
+
         # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
         # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
         U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
 
-        eigenfaces = calculate_eienfaces(V)
+        #filas > columnas
+        if (face_vectors_minus_avg.shape[0] > face_vectors_minus_avg.H.shape[0]):
+            Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
+            (autovectores, autovalores) = calculate_eigenvalues(Ss)
+        # columnas > filas
+        else:
+            Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
+            (autovectores, autovalores) = calculate_eigenvalues(Ss)
+            autovectores = face_vectors_minus_avg.H * autovectores
+            for i in range(face_vectors_minus_avg.shape[0]):
+                autovectores[:,i] = autovectores[:,i] / np.linalg.norm(autovectores[:,i])
+
+        idx = np.argsort(-autovalores)
+        autovalores = autovalores[idx]
+        autovectores = autovectores[:,idx]
+
+        autovectores = np.reshape(autovectores,autovectores.shape[0:2])
+
+        eigenfaces = calculate_eienfaces(autovectores.H)
+        eigenfaces2 = calculate_eienfaces(V)
 
         gamma_vectors = calculate_gamma_vectors(eigenfaces, face_vectors_minus_avg)
         gamma_vectors_set[i] = gamma_vectors
-        #train_set[i] = gamma_vectors
+
 
     return gamma_vectors_set
 

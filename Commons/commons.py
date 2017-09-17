@@ -104,12 +104,13 @@ def calculate_DSQR(A):
                 n = n-2
 
     eigenvalues.insert(len(eigenvalues), A[0,0])
-    return np.matrix(eigenvalues)
+    return (np.matrix(Q), np.matrix(eigenvalues))
 
 def calculate_eigenvalues(A):
     if (A.shape[0] == A.H.shape[0]):
         H = calculate_hessenberg(A)
-        return calculate_DSQR(H).H
+        (vectors, values) = calculate_DSQR(H)
+        return values.H
     else:
         print("Error: You should provide a square matrix")
 
