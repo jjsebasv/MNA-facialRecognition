@@ -1,9 +1,11 @@
 from pathlib import Path
 from utils import *
+from sklearn import svm
 
 #Subjects
 SUBJECTS = 40
-IMG_PER_SUBJECT = 10
+IMG_PER_SUBJECT = 7
+TEST_IMG_PER_SUBJECT = 3
 PIXELS_H = 92
 PIXELS_V = 112
 
@@ -13,9 +15,25 @@ def get_training_faces(subject):
     images_list = Path("images/"+ subject).glob('**/*.pgm')
 
     for image in images_list:
+        if c > 6:
+            break
         im = np.asarray(Image.open(str(image)).convert('L'))
         A.append(im)
         y.append(c)
+        c = c + 1
+
+    return [A, y]
+
+def get_test_faces(subject):
+    c = 0
+    A, y = [], []
+    images_list = Path("images/"+ subject).glob('**/*.pgm')
+
+    for image in images_list:
+        if c > 6:
+            im = np.asarray(Image.open(str(image)).convert('L'))
+            A.append(im)
+            y.append(c)
         c = c + 1
 
     return [A, y]
@@ -46,49 +64,50 @@ def calculate_eienfaces(eigenvectors):
     return eigenfaces
 
 def training_set_gamma_vectors():
-    #train_set = np.empty((SUBJECTS, IMG_PER_SUBJECT, PIXELS_V, PIXELS_H), dtype="uint8")
-    gamma_vectors_set = np.empty((SUBJECTS, IMG_PER_SUBJECT, IMG_PER_SUBJECT))
-    print(SUBJECTS - 1)
-    for i in range(0, SUBJECTS - 1):
-        print(i)
+    images = np.empty((SUBJECTS, IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+    for i in range(0, SUBJECTS):
         [training_faces, y] = get_training_faces("s"+ str(i+1))
 
         # cada face_vector es de (1, 112*92) = (1, 10304)
         face_vectors = calculate_face_vectors(training_faces)
-        average_face_vect = average_face_vector(face_vectors)
-        face_vectors_minus_avg = np.matrix(face_vectors - average_face_vect)
+        images[i] = face_vectors
 
+    images = images.reshape((SUBJECTS * IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+    average_face_vect = average_face_vector(images)
+    face_vectors_minus_avg = np.empty((images.shape[0], PIXELS_H * PIXELS_V))
+    for i in range(images.shape[0]):
+        face_vectors_minus_avg[i] = images[i] - average_face_vect
+    print(face_vectors_minus_avg[0].shape)
 
-        # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
-        # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
-        U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+    test_images = np.empty((SUBJECTS, TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+    for i in range(0, SUBJECTS):
+        [test_faces, y] = get_test_faces("s"+ str(i+1))
 
-        #filas > columnas
-        if (face_vectors_minus_avg.shape[0] > face_vectors_minus_avg.H.shape[0]):
-            Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-            (autovectores, autovalores) = calculate_eigenvalues(Ss)
-        # columnas > filas
-        else:
-            Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-            (autovectores, autovalores) = calculate_eigenvalues(Ss)
-            autovectores = face_vectors_minus_avg.H * autovectores
-            for i in range(face_vectors_minus_avg.shape[0]):
-                autovectores[:,i] = autovectores[:,i] / np.linalg.norm(autovectores[:,i])
+        # cada face_vector es de (1, 112*92) = (1, 10304)
+        test_face_vectors = calculate_face_vectors(test_faces)
+        test_images[i] = test_face_vectors
 
-        idx = np.argsort(-autovalores)
-        autovalores = autovalores[idx]
-        autovectores = autovectores[:,idx]
+    test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+    test_face_vectors_minus_avg = np.matrix(test_face_vectors - average_face_vect)
 
-        autovectores = np.reshape(autovectores,autovectores.shape[0:2])
+    # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
+    # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
+    U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+    # B = V[0:V.shape[0],:]
+    #proyecto
+    improy      = np.dot(images,np.transpose(V))
+    imtstproy   = np.dot(test_images,np.transpose(V))
+    person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
+    persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
 
-        eigenfaces = calculate_eienfaces(autovectores.H)
-        eigenfaces2 = calculate_eienfaces(V)
+    #SVM
+    #entreno
+    clf = svm.LinearSVC()
+    clf.fit(improy,person.ravel())
+    accs = clf.score(imtstproy,persontst.ravel())
+    print('Precision con {0} autocaras: {1} %\n'.format(100,accs*100))
 
-        gamma_vectors = calculate_gamma_vectors(eigenfaces, face_vectors_minus_avg)
-        gamma_vectors_set[i] = gamma_vectors
-
-
-    return gamma_vectors_set
+    return clf
 
 def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
     vector_eigenfaces = np.empty((IMG_PER_SUBJECT, PIXELS_H * PIXELS_V), dtype="uint8")

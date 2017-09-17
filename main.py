@@ -3,8 +3,6 @@ from face_recognition import *
 
 def main():
     trainset = training_set_gamma_vectors();
-    print(trainset)
-    print(trainset.shape)
 
 
 if __name__ == "__main__":
