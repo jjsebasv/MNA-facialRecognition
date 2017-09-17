@@ -3,9 +3,9 @@ from utils import *
 from sklearn import svm
 
 #Subjects
-SUBJECTS = 3
-IMG_PER_SUBJECT = 7
-TEST_IMG_PER_SUBJECT = 3
+SUBJECTS = 5
+IMG_PER_SUBJECT = 6
+TEST_IMG_PER_SUBJECT = 4
 PIXELS_H = 92
 PIXELS_V = 112
 
@@ -15,7 +15,7 @@ def get_training_faces(subject):
     images_list = Path("images/"+ subject).glob('**/*.pgm')
 
     for image in images_list:
-        if c > 6:
+        if c >= IMG_PER_SUBJECT:
             break
         im = np.asarray(Image.open(str(image)).convert('L'))
         A.append(im)
@@ -30,7 +30,7 @@ def get_test_faces(subject):
     images_list = Path("images/"+ subject).glob('**/*.pgm')
 
     for image in images_list:
-        if c > 6:
+        if c >= IMG_PER_SUBJECT:
             im = np.asarray(Image.open(str(image)).convert('L'))
             A.append(im)
             y.append(c)
@@ -85,6 +85,8 @@ def training_set_gamma_vectors():
         # cada face_vector es de (1, 112*92) = (1, 10304)
         test_face_vectors = calculate_face_vectors(test_faces)
         test_images[i] = test_face_vectors
+
+    show_image(vector_to_matix(average_face_vect))
 
     test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
     test_face_vectors_minus_avg = np.empty((test_images.shape[0], PIXELS_H * PIXELS_V))
@@ -141,7 +143,7 @@ def parse_query(subject, image, clf, avg_image, V):
     image = np.array(matrix_to_vector(get_test_faces("s"+str(subject))[0][image]))
     diff = image - avg_image
     improy = np.dot([image], np.transpose(V))
-    print(clf.predict(improy))
+    return clf.predict(improy)
 
 #Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
 #Los autvectores y autovalores q calculamos aca mas los autovectores de long 10304. Esos autovectores son los que termina
