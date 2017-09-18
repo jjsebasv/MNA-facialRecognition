@@ -10,8 +10,9 @@ def as_row_matrix(A):
         mat = np.vstack((mat, np.asarray(row).reshape(1, -1)))
     return mat
 
+
 def matrix_to_vector(matrix):
-    return np.reshape(matrix, 92 * 112).astype(np.uint8)
+    return (np.reshape(matrix, 92 * 112).astype(np.uint8) - 127.5) / 127.5
 
 
 def vector_to_matix(face_vector):
@@ -25,7 +26,6 @@ def show_image(image_matrix):
 
 def calculate_hessenberg(A):
     m = A.shape[0]  # m --> rows
-    n = A.H.shape[0]  # n --> cols
     H = np.matrix(A)
     for j in range(0, m - 2):
         aux = range(j + 1, m)
@@ -44,8 +44,7 @@ def calculate_hessenberg(A):
             for r in aux3:
                 for c in aux:
                     H[r, c] = Hh[r, c - 1 - j]
-        else:
-            u = x;
+
     return H
 
 
@@ -58,7 +57,6 @@ def diag(n):
 
 def calculate_QR(A):
     n = A.shape[0]  # n --> rows
-    m = A.H.shape[0]  # m --> cols
     R = np.matrix(A)
     Q = np.matrix(diag(n))
     for i in range(0, n):
@@ -86,7 +84,7 @@ def calculate_QR(A):
             for c2 in aux2:
                 Q[i, c2] = Qq[0, c2]
                 Q[j, c2] = Qq[1, c2]
-    return (Q.H, R)
+    return Q.H, R
 
 
 # http://web.stanford.edu/class/cme335/lecture5
@@ -134,76 +132,80 @@ def calculate_DSQR(A):
 def calculate_givensSinCos(a, b):
     if b != 0:
         if np.absolute(b) > np.absolute(a):
-            r = a/b
-            s = 1/np.sqrt(1+np.power(r,2))
-            c = s*r
+            r = a / b
+            s = 1 / np.sqrt(1 + np.power(r, 2))
+            c = s * r
         else:
-            r = b/a
-            c = 1/np.sqrt(1+np.power(r,2))
-            s = c*r
+            r = b / a
+            c = 1 / np.sqrt(1 + np.power(r, 2))
+            s = c * r
     else:
         c = 1
         s = 0
-    return (c,s)
+    return c, s
+
 
 def calculate_givensQR(A):
-    n = A.shape[0] # n --> rows
-    m = A.H.shape[0] # m --> cols
+    n = A.shape[0]  # n --> rows
+    m = A.H.shape[0]  # m --> cols
     Q = np.matrix(diag(n))
     R = A
-    for j in range (0,m):
-        for i in range (n-1,j,-1):
+    for j in range(0, m):
+        for i in range(n - 1, j, -1):
             G = diag(n)
-            (c,s) = calculate_givensSinCos( R[i-1,j] , R[i,j])
-            G[i-1,i-1] = c
-            G[i-1, i] = -s
-            G[i, i-1] = s
+            (c, s) = calculate_givensSinCos(R[i - 1, j], R[i, j])
+            G[i - 1, i - 1] = c
+            G[i - 1, i] = -s
+            G[i, i - 1] = s
             G[i, i] = c
-            Q = Q*G
+            Q = Q * G
             R = Q.H * A
-    return (Q,R)
+    return (Q, R)
 
-def iterate_QR (Q,R):
+
+def iterate_QR(Q, R):
     max_iteractions = 50
     flag = False
     eigvectors = Q
 
-    for i in range (0, max_iteractions):
+    for i in range(0, max_iteractions):
         print(".", end="")
         if not flag:
-            A = Q*R
+            A = Q * R
         else:
-            A = R*Q
+            A = R * Q
         flag = not flag
-        Q,R = calculate_givensQR(A)
+        Q, R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
 
-#    print(eigvectors)
-#    print()
-#    print(A)
-#    print()
-#    print(R)
-#    print()
-    return (np.matrix(A), np.matrix(eigvectors))
+    # print(eigvectors)
+    #    print()
+    #    print(A)
+    #    print()
+    #    print(R)
+    #    print()
+    return np.matrix(A), np.matrix(eigvectors)
+
 
 def get_eigenvalues(A):
     eigenvalues = []
-    convergence = 0.00001
+    convergence = 0.00000001
 
-    for i in range(0,A.shape[0]):
-        value = A.item((i,i)) if abs(A.item((i,i))) > convergence else 0
+    for i in range(0, A.shape[0]):
+        value = A.item((i, i)) if abs(A.item((i, i))) > convergence else 0
         eigenvalues.append(value)
 
     return eigenvalues
 
-def calculate_eigenvalues(A):
-    if (A.shape[0] == A.H.shape[0]):
-        H = calculate_hessenberg(A)
-        (Q,R) = calculate_givensQR(H)
-        (eigenvalues, eigenvectors) = iterate_QR(Q,R)
 
-        #print(np.linalg.eig(A))
-        #(vectors, values) = calculate_DSQR(H)
-        return (get_eigenvalues(eigenvalues), eigenvectors)
+def calculate_eigenvalues(A):
+    if A.shape[0] == A.H.shape[0]:
+        H = calculate_hessenberg(A)
+        (Q, R) = calculate_givensQR(H)
+        eigenvalues, eigenvectors = iterate_QR(Q, R)
+
+        # print(np.linalg.eig(A))
+        # (vectors, values) = calculate_DSQR(H)
+        return get_eigenvalues(eigenvalues), eigenvectors
     else:
         print("Error: You should provide a square matrix")
