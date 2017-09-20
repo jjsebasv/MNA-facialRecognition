@@ -2,29 +2,44 @@ from PIL import Image
 import numpy as np
 
 
-def as_row_matrix(A):
-    if len(A) == 0:
-        return np.array([])
-    mat = np.empty((0, A[0].size), dtype=A[0].dtype)
-    for row in A:
-        mat = np.vstack((mat, np.asarray(row).reshape(1, -1)))
-    return mat
-
-
 def matrix_to_vector(matrix):
+    """
+    Given a matrix returns a flatten vector of if.
+
+    Keyword arguments:
+    matrix -- the matrix to be reshapen
+    """
     return (np.reshape(matrix, 92 * 112).astype(np.uint8) - 127.5) / 127.5
 
 
 def vector_to_matix(face_vector):
+    """
+    Given a vector returns a matrix of if.
+
+    Keyword arguments:
+    face_vector -- the vector to be reshapen
+    """
     return face_vector.reshape((112, 92)).astype(np.uint8)
 
 
 def show_image(image_matrix):
+    """
+    Given a matrix representing an image, it shows it.
+
+    Keyword arguments:
+    image_matrix -- the matrix representation of an image
+    """
     img = Image.fromarray(image_matrix, 'L')
     img.show()
 
 
 def calculate_hessenberg(A):
+    """
+    Calculates the Hesenberg factorization of a given matrix and returns it.
+
+    Keyword arguments:
+    A -- the matrix to which calculate de Hessenberg fatorization
+    """
     m = A.shape[0]  # m --> rows
     H = np.matrix(A)
     for j in range(0, m - 2):
@@ -47,89 +62,28 @@ def calculate_hessenberg(A):
 
     return H
 
-
 def diag(n):
+    """
+    Returns a square matrix of n rows with 1 on the diag and 0 on the rest.
+
+    Keyword arguments:
+    n -- matrix size
+    """
     D = np.zeros((n, n))
     for i in range(0, n):
         D[i, i] = 1
     return D
 
-
-def calculate_QR(A):
-    n = A.shape[0]  # n --> rows
-    R = np.matrix(A)
-    Q = np.matrix(diag(n))
-    for i in range(0, n):
-        for j in range(i + 1, n):
-            if R[j, i] == 0:
-                c = 1
-                s = 0
-            elif np.absolute(R[j, i]) < np.absolute(R[i, i]):
-                t = R[j, i] / R[i, i]
-                c = 1 / np.sqrt(1 + t ** 2)
-                s = c * t
-            else:
-                z = R[i, i] / R[j, i]
-                s = 1 / np.sqrt(1 + z ** 2)
-                c = s * z
-            G = np.matrix([[c, s], [-1 * s, c]])
-            aux = range(i, n)
-            Rr = G * R[np.ix_([i, j], aux)]
-            for c in aux:
-                R[i, c] = Rr[0, c - i]
-                R[j, c] = Rr[1, c - i]
-
-            aux2 = range(0, n)
-            Qq = G * Q[np.ix_([i, j], aux2)]
-            for c2 in aux2:
-                Q[i, c2] = Qq[0, c2]
-                Q[j, c2] = Qq[1, c2]
-    return Q.H, R
-
-
-# http://web.stanford.edu/class/cme335/lecture5
-def calculate_DSQR(A):
-    max_iterations = 10
-    convergence = 0.0001
-    eigenvalues = [];
-    n = A.shape[0]  # n --> rows
-    H = np.matrix(A)
-    (Q, R) = calculate_QR(H)
-    autovectores = Q
-    while not n < 2:
-        for i in range(0, max_iterations):
-            (Q, R) = calculate_QR(H)
-            H = R * Q
-            if np.absolute(H[n - 1, n - 2]) < convergence:
-                eigenvalues.insert(len(eigenvalues), H[n - 1, n - 1])
-                aux = range(0, n - 1)
-                H = H[np.ix_(aux, aux)]
-                n = n - 1
-                break
-
-            if i == max_iterations:
-                aux2 = range(n - 2, n)
-                submatrix = H[np.ix_(aux2, aux2)]
-                b = -1 * (submatrix[0, 0] + submatrix[1, 1]);
-                c = (submatrix(0, 0) * submatrix(1, 1)) - (submatrix(1, 2) * submatrix(2, 1))
-
-                d = b ** 2 - 4 * c
-                if d >= 0:
-                    eigenvalues.insert(len(eigenvalues), (-1 * b + np.sqrt(d)) / 2)
-                    eigenvalues.insert(len(eigenvalues), (-1 * b - np.sqrt(d)) / 2)
-                else:
-                    eigenvalues.insert(len(eigenvalues), (-1 * b / 2 + np.sqrt(d * -1)) * j / 2)
-                    eigenvalues.insert(len(eigenvalues), (-1 * b / 2 - np.sqrt(d * -1)) * j / 2)
-
-                aux3 = range(0, n - 2)
-                H = H[np.ix_(aux3, aux3)]
-                n = n - 2
-
-    eigenvalues.insert(len(eigenvalues), A[0, 0])
-    return (np.matrix(autovectores), np.matrix(eigenvalues))
-
-
 def calculate_givensSinCos(a, b):
+    """
+    [Auxiliar to calculate_givensQR]
+
+    Calculates the Givens sin and cos over two given elements of a matrix.
+    Returns the converted numbers.
+
+    Keyword arguments:
+    a, b -- Two matrix numbers to be compared and factorized
+    """
     if b != 0:
         if np.absolute(b) > np.absolute(a):
             r = a / b
@@ -146,6 +100,12 @@ def calculate_givensSinCos(a, b):
 
 
 def calculate_givensQR(A):
+    """
+    Calculates the Givens rotation and returns the first QR iteration
+
+    Keyword arguments:
+    A -- the matrix to which calculate de Givens fatorization
+    """
     n = A.shape[0]  # n --> rows
     m = A.H.shape[0]  # m --> cols
     Q = np.matrix(diag(n))
@@ -164,6 +124,12 @@ def calculate_givensQR(A):
 
 
 def iterate_QR(Q, R):
+    """
+    Iterates over the QR given until max_iterations and returns QR
+
+    Keyword arguments:
+    QR -- the QR descomposition to which iterate
+    """
     max_iteractions = 50
     flag = False
     eigvectors = Q
@@ -177,17 +143,18 @@ def iterate_QR(Q, R):
         flag = not flag
         Q, R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
-
-    # print(eigvectors)
-    #    print()
-    #    print(A)
-    #    print()
-    #    print(R)
-    #    print()
+    print()
     return np.matrix(A), np.matrix(eigvectors)
 
 
 def get_eigenvalues(A):
+    """
+    Given a matrix with eigenvalues on the diag, returns an array with
+    the eigenvalues normalized (if eigenvalue < convergence ==> eigenvalue = 0)
+
+    Keyword arguments:
+    A -- the matrix with eigenvalues on the diag
+    """
     eigenvalues = []
     convergence = 0.00000001
 
@@ -199,13 +166,19 @@ def get_eigenvalues(A):
 
 
 def calculate_eigenvalues(A):
+    """
+    Recieves a square matrix and calculate eigenvalues and eigenvectors.
+    The algorithm first calculate the Hessenberg matrix of the given one,
+    then it calculates the givens factorization.
+
+    Keyword arguments:
+    A -- the matrix to which calculate eigenvalues and eigenvectors
+    """
     if A.shape[0] == A.H.shape[0]:
         H = calculate_hessenberg(A)
         (Q, R) = calculate_givensQR(H)
         eigenvalues, eigenvectors = iterate_QR(Q, R)
 
-        # print(np.linalg.eig(A))
-        # (vectors, values) = calculate_DSQR(H)
         return get_eigenvalues(eigenvalues), eigenvectors
     else:
         print("Error: You should provide a square matrix")
