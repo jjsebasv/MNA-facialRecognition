@@ -81,7 +81,7 @@ def main():
 
     acc = 0
     total = 0
-    for subject in range(1, args.subjects):
+    for subject in range(1, args.subjects + 1):
         for image in range(0, args.test_img_per_subject):
             total += 1
             ans = METHODS[args.method][TEST_FUNCTION](args, subject, image, clf, query_params)

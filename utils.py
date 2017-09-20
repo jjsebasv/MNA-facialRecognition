@@ -143,7 +143,6 @@ def iterate_QR(Q, R):
         flag = not flag
         Q, R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
-    print()
     return np.matrix(A), np.matrix(eigvectors)
 
 
@@ -175,8 +174,8 @@ def calculate_eigenvalues(A):
     A -- the matrix to which calculate eigenvalues and eigenvectors
     """
     if A.shape[0] == A.H.shape[0]:
-        # H = calculate_hessenberg(A)
-        (Q, R) = calculate_givensQR(A)
+        H = calculate_hessenberg(A)
+        (Q, R) = calculate_givensQR(H)
         eigenvalues, eigenvectors = iterate_QR(Q, R)
 
         return get_eigenvalues(eigenvalues), eigenvectors
