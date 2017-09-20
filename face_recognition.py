@@ -37,6 +37,7 @@ def get_training_faces_for_subject(args, subject):
             subjects
             test_img_per_subject
     """
+
     A = []
     path = "%s/%s" % (args.imgdb, subject)
     images_list = Path(path).glob('**/*.pgm')
@@ -63,6 +64,7 @@ def get_test_faces_for_subject(args, subject):
             subjects
             test_img_per_subject
     """
+
     A = []
     path = "%s/%s" % (args.imgdb, subject)
     images_list = Path(path).glob('**/*.pgm')
@@ -82,6 +84,7 @@ def average_face_vector(face_vectors):
     Keyword arguments:
     face_vectors -- array of images
     """
+
     dim = np.shape(face_vectors)
     average = np.zeros((1, dim[1]))
     for face_vector in face_vectors:
@@ -91,6 +94,13 @@ def average_face_vector(face_vectors):
 
 
 def calculate_face_vectors(images):
+    """
+    Given an array of images return an array of vectors
+
+    Keyword arguments:
+    images -- array of images
+    """
+
     dim = np.shape(images)
     face_vectors = np.empty((dim[0], dim[1] * dim[2]))
     for i in range(0, dim[0]):
@@ -107,13 +117,16 @@ def calculate_eienfaces(args, eigenvectors):
 
 
 def get_training_images(args):
+    """
+    Get the training images
+    """
+
     images = np.empty((args.subjects, args.img_per_subject, PIXELS_H * PIXELS_V))
     for i in range(0, args.subjects):
         training_faces = get_training_faces_for_subject(args, "s%d" % (i + 1))
 
         ''' Each face_vector is (1, 112*92) = (1, 10304)'''
-        face_vectors = calculate_face_vectors(training_faces)
-        images[i] = face_vectors
+        images[i] = calculate_face_vectors(training_faces)
 
     return images.reshape((args.subjects * args.img_per_subject, PIXELS_H * PIXELS_V))
 
