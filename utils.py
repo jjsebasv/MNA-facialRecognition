@@ -143,6 +143,7 @@ def iterate_QR(Q, R):
         flag = not flag
         Q, R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
+    print()
     return np.matrix(A), np.matrix(eigvectors)
 
 

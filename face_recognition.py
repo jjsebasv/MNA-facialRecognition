@@ -33,7 +33,6 @@ def get_training_faces_for_subject(args, subject):
         if i >= args.img_per_subject:
             break
         im = np.asarray(Image.open(str(image)).convert('L'))
-        # im = (np.asarray(Image.open(str(image)).convert('L')) - 127.5) / 127.5
         A.append(im)
         y.append(i)
 
@@ -48,7 +47,6 @@ def get_test_faces(args, subject):
     for i, image in enumerate(images_list):
         if i >= args.img_per_subject:
             im = np.asarray(Image.open(str(image)).convert('L'))
-            # im = (np.asarray(Image.open(str(image)).convert('L')) - 127.5) / 127.5
             A.append(im)
             y.append(i)
 
@@ -132,21 +130,6 @@ def pca(args):
         eigenvectors = face_vectors_minus_avg.transpose() * eigenvectors
         for i in range(face_vectors_minus_avg.shape[0]):
             eigenvectors[:, i] = eigenvectors[:, i] / np.linalg.norm(eigenvectors[:, i])
-    #
-    # idx = np.argsort(-eigenvalues)
-    # eigenvalues = eigenvalues[idx]
-    # eigenvectors = eigenvectors[:,idx]
-    # eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
-
-    # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
-    # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
-
-
-    # Esta es la magia que no tenemos que borrar por las dudas
-    # U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
-
-    # B = V[0:V.shape[0],:]
-    # proyecto
 
     improy = np.dot(face_vectors_minus_avg, eigenvectors)
     imtstproy = np.dot(test_face_vectors_minus_avg, eigenvectors)
@@ -158,15 +141,6 @@ def pca(args):
     query_params.test_projections = imtstproy
 
     return query_params
-
-    # # SVM
-    # # entreno
-    # clf = svm.LinearSVC()
-    # clf.fit(improy, person.ravel())
-    # accs = clf.score(imtstproy, persontst.ravel())
-    # # print("Precision "+ str(accs * 100) +"\n")
-    #
-    # return clf, average_face_vect, eigenvectors
 
 
 def kpca(args):
@@ -191,26 +165,10 @@ def kpca(args):
     # eigenvalues = np.flipud(eigenvalues) # Ya vienen ordenados
     eigenvectors = np.fliplr(eigenvectors)
 
-    # eigenvalues = np.sort(eigenvalues)[:-1]
-
-    # for col in range(eigenvectors.shape[1]):
-    #     # FIXME Corregido con np.abs
-    #     eigenvectors[:, col] = eigenvectors[:, col] / np.sqrt(eigenvalues[col]) # Normalizacion. Sec B.2
-
-    # test_cases = args.subjects * args.test_img_per_subject
-    # ones_test = np.ones([test_cases, observations]) / observations
-
-    # Ecuacion 52 del paper
-    # K_test = (np.dot(test_images, images.T) / observations + 1) ** degree
-    # Ecuacion 54 del paper
-    # ones_test_dot_K = np.dot(ones_test, K)
-    # K_test = K_test - ones_test_dot_K - np.dot(K_test, ones) + np.dot(ones_test_dot_K, ones)
-
     query_params = KernelPCAQueryParams()
     query_params.eigenvectors = eigenvectors
     query_params.training_projections = np.dot(K.T, eigenvectors)  # Ecuacion 17
-    # query_params.test_projections = np.dot(K_test, eigenvectors)  # Ecuacion 51
-    # query_params.K_test = K_test
+
     query_params.images = images
     query_params.degree = degree
     query_params.ones = ones
@@ -229,7 +187,6 @@ def pca_query(args, subject, image, clf, query_params: PCAQueryParams):
 
 def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
     image = np.array(matrix_to_vector(get_test_faces(args, "s%s" % subject)[0][image]))
-    # improy = np.dot([image], query_params.eigenvectors)
 
     test_cases = 1
     ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
@@ -243,18 +200,3 @@ def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
     imtstproypre = np.dot(K_test, query_params.eigenvectors)  # Ecuacion 51
 
     return clf.predict(imtstproypre)
-
-# Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
-# Los autvectores y autovalores q calculamos aca mas los autovectores de long 10304. Esos autovectores son los que termina
-# usando. Creo q algo anda mal porque no deberia tardar tanto para calcular esos autovectores.
-
-# filas < columnas
-# if (face_vectors_minus_avg.shape[0] < face_vectors_minus_avg.H.shape[0]):
-#    S = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-# columnas < filas
-# else:
-#   S = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-
-# Antes no estaba ese if, y calculaba la cov de face_vectors_minus_avg.transpose() --> Tabla de 10304*10304
-# covariance_matrix = np.matrix(np.cov(S))
-# eig = calculate_eigenvalues(covariance_matrix)
