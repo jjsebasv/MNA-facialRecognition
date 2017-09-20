@@ -18,7 +18,7 @@ IMAGE_DATABASES = [
     'images'
 ]
 
-SUBJECTS = 10
+SUBJECTS = 5
 IMG_PER_SUBJECT = 4
 TEST_IMG_PER_SUBJECT = 6
 
@@ -29,14 +29,14 @@ def parse_args():
     parser.add_argument(
         '--method',
         help='Method used to perform the face recognition',
-        default="kpca",
+        default="pca",
         choices=METHODS.keys()
     )
 
     parser.add_argument(
         '--imgdb',
         help='Image database',
-        default='att_images',
+        default='images',
         choices=IMAGE_DATABASES
     )
 
