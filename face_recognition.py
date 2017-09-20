@@ -25,6 +25,19 @@ class KernelPCAQueryParams(PCAQueryParams):
 
 
 def get_training_faces_for_subject(args, subject):
+    print(args)
+    """
+    Given a subject get his training faces
+
+    Keyword arguments:
+    subject -- given subject
+    args --
+            img_per_subject
+            imgdb
+            method
+            subjects
+            test_img_per_subject
+    """
     A = []
     path = "%s/%s" % (args.imgdb, subject)
     images_list = Path(path).glob('**/*.pgm')
@@ -38,7 +51,20 @@ def get_training_faces_for_subject(args, subject):
     return A
 
 
-def get_test_faces(args, subject):
+def get_test_faces_for_subject(args, subject):
+    print(args)
+    """
+    Given a subject get his test faces
+
+    Keyword arguments:
+    subject -- given subject
+    args --
+            img_per_subject
+            imgdb
+            method
+            subjects
+            test_img_per_subject
+    """
     A = []
     path = "%s/%s" % (args.imgdb, subject)
     images_list = Path(path).glob('**/*.pgm')
@@ -91,7 +117,7 @@ def get_training_images(args):
 def get_test_images(args):
     test_images = np.empty((args.subjects, args.test_img_per_subject, PIXELS_H * PIXELS_V))
     for i in range(0, args.subjects):
-        test_faces = get_test_faces(args, "s%d" % (i + 1))
+        test_faces = get_test_faces_for_subject(args, "s%d" % (i + 1))
 
         ''' Each face_vector is (1, 112*92) = (1, 10304)'''
         test_face_vectors = calculate_face_vectors(test_faces)
@@ -182,14 +208,14 @@ def kpca(args):
 
 
 def pca_query(args, subject, image, clf, query_params: PCAQueryParams):
-    image = np.array(matrix_to_vector(get_test_faces(args, "s%s" % subject)[image]))
+    image = np.array(matrix_to_vector(get_test_faces_for_subject(args, "s%s" % subject)[image]))
     diff = image - query_params.average_image
     improy = np.dot([diff], query_params.eigenvectors)
     return clf.predict(improy)
 
 
 def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
-    image = np.array(matrix_to_vector(get_test_faces(args, "s%s" % subject)[image]))
+    image = np.array(matrix_to_vector(get_test_faces_for_subject(args, "s%s" % subject)[image]))
 
     test_cases = 1
     ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
