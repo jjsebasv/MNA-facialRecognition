@@ -188,21 +188,23 @@ def kpca(args):
 
     # Los autovalores vienen en orden descendente. Lo cambio
     # Tomado del archivo de ejemplo en el campus
-    eigenvalues = np.flipud(eigenvalues)
+    # eigenvalues = np.flipud(eigenvalues) # Ya vienen ordenados
     eigenvectors = np.fliplr(eigenvectors)
 
-    for col in range(eigenvectors.shape[1]):
-        # FIXME Corregido con np.abs
-        eigenvectors[:, col] = eigenvectors[:, col] / np.sqrt(eigenvalues[col])  # Normalizacion. Sec B.2
+    # eigenvalues = np.sort(eigenvalues)[:-1]
 
-    #test_cases = args.subjects * args.test_img_per_subject
-    #ones_test = np.ones([test_cases, observations]) / observations
+    # for col in range(eigenvectors.shape[1]):
+    #     # FIXME Corregido con np.abs
+    #     eigenvectors[:, col] = eigenvectors[:, col] / np.sqrt(eigenvalues[col]) # Normalizacion. Sec B.2
+
+    # test_cases = args.subjects * args.test_img_per_subject
+    # ones_test = np.ones([test_cases, observations]) / observations
 
     # Ecuacion 52 del paper
-    #K_test = (np.dot(test_images, images.T) / observations + 1) ** degree
+    # K_test = (np.dot(test_images, images.T) / observations + 1) ** degree
     # Ecuacion 54 del paper
-    #ones_test_dot_K = np.dot(ones_test, K)
-    #K_test = K_test - ones_test_dot_K - np.dot(K_test, ones) + np.dot(ones_test_dot_K, ones)
+    # ones_test_dot_K = np.dot(ones_test, K)
+    # K_test = K_test - ones_test_dot_K - np.dot(K_test, ones) + np.dot(ones_test_dot_K, ones)
 
     query_params = KernelPCAQueryParams()
     query_params.eigenvectors = eigenvectors

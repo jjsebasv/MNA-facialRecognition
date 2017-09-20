@@ -130,7 +130,7 @@ def iterate_QR(Q, R):
     Keyword arguments:
     QR -- the QR descomposition to which iterate
     """
-    max_iteractions = 50
+    max_iteractions = 100
     flag = False
     eigvectors = Q
 
@@ -175,8 +175,8 @@ def calculate_eigenvalues(A):
     A -- the matrix to which calculate eigenvalues and eigenvectors
     """
     if A.shape[0] == A.H.shape[0]:
-        H = calculate_hessenberg(A)
-        (Q, R) = calculate_givensQR(H)
+        # H = calculate_hessenberg(A)
+        (Q, R) = calculate_givensQR(A)
         eigenvalues, eigenvectors = iterate_QR(Q, R)
 
         return get_eigenvalues(eigenvalues), eigenvectors
