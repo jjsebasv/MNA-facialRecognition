@@ -3,6 +3,8 @@
 from PIL import Image
 from pathlib import Path
 
+DEFAULT_IMAGE_SIZE = [92, 112]
+
 def resize_and_crop(img_path, size, crop_type='top'):
     """
     Resize and crop an image to fit the specified size.
@@ -18,11 +20,14 @@ def resize_and_crop(img_path, size, crop_type='top'):
             to save the image.
         ValueError: if an invalid `crop_type` is provided.
     """
+
     # If height is higher we resize vertically, if not we resize horizontally
     img = Image.open(img_path)
+
     # Get current and desired ratio for the images
     img_ratio = img.size[0] / float(img.size[1])
     ratio = size[0] / float(size[1])
+
     #The image is scaled/cropped vertically or horizontally depending on the ratio
     if ratio > img_ratio:
         img = img.resize((size[0], size[0] * img.size[1] / img.size[0]),
@@ -57,10 +62,17 @@ def resize_and_crop(img_path, size, crop_type='top'):
     img = img.convert('RGB')
     img.save(str(img_path) + ".pgm")
 
+
 def get_images_from_files():
+    """
+    Resize and crop all the images from webcam_images
+    """
+
     images_list = Path("webcam_images/").glob('**/*.jpg')
 
     for image in images_list:
-        resize_and_crop(image, [92, 112], 'middle')
+        resize_and_crop(image, DEFAULT_IMAGE_SIZE, 'middle')
+
+    print("Images ready!")
 
 get_images_from_files()
