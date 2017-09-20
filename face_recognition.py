@@ -58,7 +58,6 @@ def average_face_vector(face_vectors):
     average = np.zeros((1, dim[1]))
     for face_vector in face_vectors:
         average += face_vector
-    # average = np.round(average / dim[0]);
     average = average / dim[0]
     return average
 
@@ -84,7 +83,7 @@ def get_training_images(args):
     for i in range(0, args.subjects):
         [training_faces, y] = get_training_faces_for_subject(args, "s%d" % (i + 1))
 
-        # cada face_vector es de (1, 112*92) = (1, 10304)
+        ''' Each face_vector is (1, 112*92) = (1, 10304)'''
         face_vectors = calculate_face_vectors(training_faces)
         images[i] = face_vectors
 
@@ -96,7 +95,7 @@ def get_test_images(args):
     for i in range(0, args.subjects):
         [test_faces, y] = get_test_faces(args, "s%d" % (i + 1))
 
-        # cada face_vector es de (1, 112*92) = (1, 10304)
+        ''' Each face_vector is (1, 112*92) = (1, 10304)'''
         test_face_vectors = calculate_face_vectors(test_faces)
         test_images[i] = test_face_vectors
 
@@ -106,7 +105,7 @@ def get_test_images(args):
 def pca(args):
     images = get_training_images(args)
 
-    # Restamos la media a todas las imagenes de entrenamiento
+    ''' Substract the media from every training image '''
     average_face_vect = average_face_vector(images)
     face_vectors_minus_avg = np.empty((images.shape[0], PIXELS_H * PIXELS_V))
     for i in range(images.shape[0]):
@@ -114,17 +113,18 @@ def pca(args):
 
     test_images = get_test_images(args)
 
-    # Restamos la media a todas las imagenes de testing
+    ''' Substract the media from every testing image '''
     test_face_vectors_minus_avg = np.empty((test_images.shape[0], PIXELS_H * PIXELS_V))
     for i in range(test_images.shape[0]):
         test_face_vectors_minus_avg[i] = test_images[i] - average_face_vect
 
-    # Calculamos los autovectores de A'A o AA' dependiendo de las dimensiones
+    ''' Calculate eigenvalues and eigenvectors of transpose(A)*A or A*transpose(A) according dimensions '''
     if len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]:
+        ''' #Rows > #Columns '''
         Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
         eigenvalues, eigenvectors = calculate_eigenvalues(Ss)
-    # columnas > filas
     else:
+        ''' #Columns > #Rows '''
         Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
         eigenvalues, eigenvectors = calculate_eigenvalues(Ss)
         eigenvectors = face_vectors_minus_avg.transpose() * eigenvectors
@@ -150,24 +150,29 @@ def kpca(args):
     observations = args.subjects * args.img_per_subject
 
     degree = 2
-    K = (np.dot(images, images.T) / observations + 1) ** degree  # Ecuacion 61 del paper
+    ''' Paper eq n° 61 '''
+    K = (np.dot(images, images.T) / observations + 1) ** degree
 
-    # Centramos las observaciones
-    # Ecuacion 49 del paper http://www.face-rec.org/algorithms/Kernel/kernelPCA_scholkopf.pdf
+    ''' Center observations '''
+    ''' Paper eq n° 49 '''
+    ''' http://www.face-rec.org/algorithms/Kernel/kernelPCA_scholkopf.pdf '''
     ones = np.ones([observations, observations]) / observations
     K_dot_ones = np.dot(K, ones)
     K = K - np.dot(ones, K) - K_dot_ones + np.dot(ones, K_dot_ones)
 
     eigenvalues, eigenvectors = calculate_eigenvalues(np.matrix(K))
 
-    # Los autovalores vienen en orden descendente. Lo cambio
-    # Tomado del archivo de ejemplo en el campus
-    # eigenvalues = np.flipud(eigenvalues) # Ya vienen ordenados
+    ''' Eigenvalues come in descending order. We change that '''
+    ''' Taken from Campus eg'''
+
+    ''' Ordered eigenvalues '''
     eigenvectors = np.fliplr(eigenvectors)
 
     query_params = KernelPCAQueryParams()
     query_params.eigenvectors = eigenvectors
-    query_params.training_projections = np.dot(K.T, eigenvectors)  # Ecuacion 17
+
+    ''' Paper eq n° 17 '''
+    query_params.training_projections = np.dot(K.T, eigenvectors)
 
     query_params.images = images
     query_params.degree = degree
@@ -191,12 +196,14 @@ def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
     test_cases = 1
     ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
 
-    # Ecuacion 52 del paper
+    ''' Paper eq n° 52 '''
     K_test = (np.dot([image], query_params.images.T) / query_params.observations + 1) ** query_params.degree
-    # Ecuacion 54 del paper
+
+    ''' Paper eq n° 54 '''
     ones_test_dot_K = np.dot(ones_test, query_params.K)
     K_test = K_test - ones_test_dot_K - np.dot(K_test, query_params.ones) + np.dot(ones_test_dot_K, query_params.ones)
 
-    imtstproypre = np.dot(K_test, query_params.eigenvectors)  # Ecuacion 51
+    ''' Paper eq n° 51 '''
+    imtstproypre = np.dot(K_test, query_params.eigenvectors)
 
     return clf.predict(imtstproypre)
