@@ -4,7 +4,7 @@ import numpy as np
 
 def matrix_to_vector(matrix):
     """
-    Given a matrix returns a flatten vector of if.
+    Given a matrix returns a flatten vector of it.
 
     Keyword arguments:
     matrix -- the matrix to be reshapen
@@ -14,7 +14,7 @@ def matrix_to_vector(matrix):
 
 def vector_to_matix(face_vector):
     """
-    Given a vector returns a matrix of if.
+    Given a vector returns a matrix of it.
 
     Keyword arguments:
     face_vector -- the vector to be reshapen
