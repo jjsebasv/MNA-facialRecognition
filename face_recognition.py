@@ -25,7 +25,7 @@ class KernelPCAQueryParams(PCAQueryParams):
 
 
 def get_training_faces_for_subject(args, subject):
-    A, y = [], []
+    A = []
     path = "%s/%s" % (args.imgdb, subject)
     images_list = Path(path).glob('**/*.pgm')
 
@@ -34,9 +34,8 @@ def get_training_faces_for_subject(args, subject):
             break
         im = np.asarray(Image.open(str(image)).convert('L'))
         A.append(im)
-        y.append(i)
 
-    return [A, y]
+    return A
 
 
 def get_test_faces(args, subject):
@@ -81,7 +80,7 @@ def calculate_eienfaces(args, eigenvectors):
 def get_training_images(args):
     images = np.empty((args.subjects, args.img_per_subject, PIXELS_H * PIXELS_V))
     for i in range(0, args.subjects):
-        [training_faces, y] = get_training_faces_for_subject(args, "s%d" % (i + 1))
+        training_faces = get_training_faces_for_subject(args, "s%d" % (i + 1))
 
         ''' Each face_vector is (1, 112*92) = (1, 10304)'''
         face_vectors = calculate_face_vectors(training_faces)
