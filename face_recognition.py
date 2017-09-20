@@ -145,19 +145,3 @@ def parse_query(subject, image, clf, avg_image, V):
     diff = image - avg_image
     improy = np.dot([image], V)
     return clf.predict(improy)
-
-
-#Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
-#Los autvectores y autovalores q calculamos aca mas los autovectores de long 10304. Esos autovectores son los que termina
-#usando. Creo q algo anda mal porque no deberia tardar tanto para calcular esos autovectores.
-
- # filas < columnas
-    #if (face_vectors_minus_avg.shape[0] < face_vectors_minus_avg.H.shape[0]):
-    #    S = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-    # columnas < filas
-    #else:
-     #   S = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-
-    # Antes no estaba ese if, y calculaba la cov de face_vectors_minus_avg.transpose() --> Tabla de 10304*10304
-    #covariance_matrix = np.matrix(np.cov(S))
-    #eig = calculate_eigenvalues(covariance_matrix)

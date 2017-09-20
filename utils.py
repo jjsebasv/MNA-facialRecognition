@@ -178,12 +178,6 @@ def iterate_QR (Q,R):
         Q,R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
 
-#    print(eigvectors)
-#    print()
-#    print(A)
-#    print()
-#    print(R)
-#    print()
     return (np.matrix(A), np.matrix(eigvectors))
 
 def get_eigenvalues(A):
@@ -201,9 +195,6 @@ def calculate_eigenvalues(A):
         H = calculate_hessenberg(A)
         (Q,R) = calculate_givensQR(H)
         (eigenvalues, eigenvectors) = iterate_QR(Q,R)
-
-        #print(np.linalg.eig(A))
-        #(vectors, values) = calculate_DSQR(H)
         return (get_eigenvalues(eigenvalues), eigenvectors)
     else:
         print("Error: You should provide a square matrix")
