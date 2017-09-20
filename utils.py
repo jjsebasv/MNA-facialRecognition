@@ -189,7 +189,7 @@ def iterate_QR(Q, R):
 
 def get_eigenvalues(A):
     eigenvalues = []
-    convergence = 0.00000001
+    convergence = 0.0000000000000000000001
 
     for i in range(0, A.shape[0]):
         value = A.item((i, i)) if abs(A.item((i, i))) > convergence else 0

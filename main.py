@@ -18,9 +18,9 @@ IMAGE_DATABASES = [
     'images'
 ]
 
-SUBJECTS = 10
-IMG_PER_SUBJECT = 4
-TEST_IMG_PER_SUBJECT = 6
+SUBJECTS = 40
+IMG_PER_SUBJECT = 9
+TEST_IMG_PER_SUBJECT = 1
 
 
 def parse_args():
@@ -43,21 +43,24 @@ def parse_args():
     parser.add_argument(
         '--subjects',
         help="Number of subjects",
-        default=SUBJECTS
+        default=SUBJECTS,
+        type=int
     )
 
     parser.add_argument(
         '--img-per-subj',
         help="Number of training images per subject",
         default=IMG_PER_SUBJECT,
-        dest='img_per_subject'
+        dest='img_per_subject',
+        type=int
     )
 
     parser.add_argument(
         '--test-img-per-subj',
         help="Number of training images per subject",
         default=TEST_IMG_PER_SUBJECT,
-        dest='test_img_per_subject'
+        dest='test_img_per_subject',
+        type=int
     )
 
     return parser.parse_args()
@@ -71,7 +74,7 @@ def main():
     query_params = METHODS[args.method][TRAINING_FUNCTION](args)
 
     person = np.array([[i + 1] * args.img_per_subject for i in range(args.subjects)])
-    persontst = np.array([[i + 1] * args.test_img_per_subject for i in range(args.subjects)])
+    # persontst = np.array([[i + 1] * args.test_img_per_subject for i in range(args.subjects)])
 
     clf = svm.LinearSVC()
     clf.fit(query_params.training_projections, person.ravel())
