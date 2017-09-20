@@ -16,7 +16,12 @@ class PCAQueryParams():
 
 
 class KernelPCAQueryParams(PCAQueryParams):
-    pass
+    K = None
+    K_test = None
+    observations = None
+    images = None
+    degree = None
+    ones = None
 
 
 def get_training_faces_for_subject(args, subject):
@@ -28,6 +33,7 @@ def get_training_faces_for_subject(args, subject):
         if i >= args.img_per_subject:
             break
         im = np.asarray(Image.open(str(image)).convert('L'))
+        # im = (np.asarray(Image.open(str(image)).convert('L')) - 127.5) / 127.5
         A.append(im)
         y.append(i)
 
@@ -42,6 +48,7 @@ def get_test_faces(args, subject):
     for i, image in enumerate(images_list):
         if i >= args.img_per_subject:
             im = np.asarray(Image.open(str(image)).convert('L'))
+            # im = (np.asarray(Image.open(str(image)).convert('L')) - 127.5) / 127.5
             A.append(im)
             y.append(i)
 
@@ -188,20 +195,25 @@ def kpca(args):
         # FIXME Corregido con np.abs
         eigenvectors[:, col] = eigenvectors[:, col] / np.sqrt(eigenvalues[col])  # Normalizacion. Sec B.2
 
-    test_cases = args.subjects * args.test_img_per_subject
-    ones_test = np.ones([test_cases, observations]) / observations
+    #test_cases = args.subjects * args.test_img_per_subject
+    #ones_test = np.ones([test_cases, observations]) / observations
 
     # Ecuacion 52 del paper
-    K_test = (np.dot(test_images, images.T) / observations + 1) ** degree
+    #K_test = (np.dot(test_images, images.T) / observations + 1) ** degree
     # Ecuacion 54 del paper
-
-    ones_test_dot_K = np.dot(ones_test, K)
-    K_test = K_test - ones_test_dot_K - np.dot(K_test, ones) + np.dot(ones_test_dot_K, ones)
+    #ones_test_dot_K = np.dot(ones_test, K)
+    #K_test = K_test - ones_test_dot_K - np.dot(K_test, ones) + np.dot(ones_test_dot_K, ones)
 
     query_params = KernelPCAQueryParams()
     query_params.eigenvectors = eigenvectors
     query_params.training_projections = np.dot(K.T, eigenvectors)  # Ecuacion 17
-    query_params.test_projections = np.dot(K_test, eigenvectors)  # Ecuacion 51
+    # query_params.test_projections = np.dot(K_test, eigenvectors)  # Ecuacion 51
+    # query_params.K_test = K_test
+    query_params.images = images
+    query_params.degree = degree
+    query_params.ones = ones
+    query_params.K = K
+    query_params.observations = observations
 
     return query_params
 
@@ -215,8 +227,20 @@ def pca_query(args, subject, image, clf, query_params: PCAQueryParams):
 
 def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
     image = np.array(matrix_to_vector(get_test_faces(args, "s%s" % subject)[0][image]))
-    improy = np.dot([image], query_params.eigenvectors)
-    return clf.predict(improy)
+    # improy = np.dot([image], query_params.eigenvectors)
+
+    test_cases = 1
+    ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
+
+    # Ecuacion 52 del paper
+    K_test = (np.dot([image], query_params.images.T) / query_params.observations + 1) ** query_params.degree
+    # Ecuacion 54 del paper
+    ones_test_dot_K = np.dot(ones_test, query_params.K)
+    K_test = K_test - ones_test_dot_K - np.dot(K_test, query_params.ones) + np.dot(ones_test_dot_K, query_params.ones)
+
+    imtstproypre = np.dot(K_test, query_params.eigenvectors)  # Ecuacion 51
+
+    return clf.predict(imtstproypre)
 
 # Aca falta algo, la "eigenface" es un autovector de long 10304. Fierens usa la funcion np.linalg.svd que le da:
 # Los autvectores y autovalores q calculamos aca mas los autovectores de long 10304. Esos autovectores son los que termina
