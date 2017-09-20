@@ -25,7 +25,6 @@ class KernelPCAQueryParams(PCAQueryParams):
 
 
 def get_training_faces_for_subject(args, subject):
-    print(args)
     """
     Given a subject get his training faces
 
@@ -52,7 +51,6 @@ def get_training_faces_for_subject(args, subject):
 
 
 def get_test_faces_for_subject(args, subject):
-    print(args)
     """
     Given a subject get his test faces
 
@@ -78,6 +76,12 @@ def get_test_faces_for_subject(args, subject):
 
 
 def average_face_vector(face_vectors):
+    """
+    Given an array of image faces returns the average
+
+    Keyword arguments:
+    face_vectors -- array of images
+    """
     dim = np.shape(face_vectors)
     average = np.zeros((1, dim[1]))
     for face_vector in face_vectors:

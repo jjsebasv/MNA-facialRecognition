@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument(
         '--method',
         help='Method used to perform the face recognition',
-        default="kpca",
+        default="pca",
         choices=METHODS.keys()
     )
 
