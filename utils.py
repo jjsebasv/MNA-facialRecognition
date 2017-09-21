@@ -122,12 +122,27 @@ def calculate_givensQR(A):
             R = Q.H * A
     return (Q, R)
 
+def check_eps(A, oldA):
+    """
+    Checks if from one iteration to anothe, the matrix had already converged
+    with an error lower than eps
 
-def iterate_QR(Q, R):
+    Keyword arguments:
+    A -- The new resulting matrix
+    oldA -- The last iteration of A
+    """
+    eps = 0.000001
+    for i in range(0, A.shape[0]):
+        if abs(A[i,i] - oldA[i,i]) > eps:
+            return False
+    return True
+
+def iterate_QR(A, Q, R):
     """
     Iterates over the QR given until max_iterations and returns QR
 
     Keyword arguments:
+    A -- The original matrix to check the floating point
     QR -- the QR descomposition to which iterate
     """
     max_iteractions = 100
@@ -137,10 +152,15 @@ def iterate_QR(Q, R):
     for i in range(0, max_iteractions):
         print(".", end="")
         if not flag:
-            A = Q * R
+            AUX = Q * R
         else:
-            A = R * Q
+            AUX = R * Q
         flag = not flag
+
+        if i%2 == 1 and check_eps(AUX, A):
+            break
+
+        A = AUX
         Q, R = calculate_givensQR(A)
         eigvectors = eigvectors * Q
     print()
@@ -177,7 +197,7 @@ def calculate_eigenvalues(A):
     if A.shape[0] == A.H.shape[0]:
         H = calculate_hessenberg(A)
         (Q, R) = calculate_givensQR(H)
-        eigenvalues, eigenvectors = iterate_QR(Q, R)
+        eigenvalues, eigenvectors = iterate_QR(H, Q, R)
 
         return get_eigenvalues(eigenvalues), eigenvectors
     else:
