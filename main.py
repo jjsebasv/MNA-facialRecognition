@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 import argparse
+import pprint
 
 from sklearn import svm
 
 from face_recognition import *
+from serialization_utils import *
 
 TRAINING_FUNCTION = 0
 TEST_FUNCTION = 1
@@ -71,7 +73,11 @@ def main():
 
     # clf, avg_image, V = pca(args)
 
-    query_params = METHODS[args.method][TRAINING_FUNCTION](args)
+    if check_query_params(args):
+        query_params = load_query_params(args)
+    else:
+        query_params = METHODS[args.method][TRAINING_FUNCTION](args)
+        save_query_params(query_params, args)
 
     person = np.array([[i + 1] * args.img_per_subject for i in range(args.subjects)])
     # persontst = np.array([[i + 1] * args.test_img_per_subject for i in range(args.subjects)])
