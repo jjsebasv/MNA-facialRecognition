@@ -61,7 +61,7 @@ def resize_and_crop(img_path, size, crop_type='top'):
                          Image.ANTIALIAS)
         # If the scale is the same, we do not need to crop
     img = img.convert('RGB')
-    img.save(str(img_path) + ".pgm")
+    img.save(str(img_path) + ".png")
 
 
 def get_images_from_files():
@@ -69,7 +69,7 @@ def get_images_from_files():
     Resize and crop all the images from webcam_images
     """
 
-    images_list = Path("webcam_images/").glob('**/*.jpg')
+    images_list = Path("webcam/").glob('**/*.jpg')
 
     for image in images_list:
         resize_and_crop(image, DEFAULT_IMAGE_SIZE, 'middle')
