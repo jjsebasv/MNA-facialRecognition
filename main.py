@@ -7,6 +7,16 @@ from sklearn import svm
 from face_recognition import *
 from serialization_utils import *
 
+WEBCAM_AVAILABLE = False
+try:
+    import pygame
+    import pygame.camera
+    import tempfile
+
+    WEBCAM_AVAILABLE = True
+except ImportError:
+    print("Webcam libraries not available. Install pygame")
+
 TRAINING_FUNCTION = 0
 TEST_FUNCTION = 1
 
@@ -70,6 +80,25 @@ def parse_args():
         help="Path of file to query"
     )
 
+    if WEBCAM_AVAILABLE:
+        parser.add_argument(
+            '-l',
+            '--live',
+            help="Live subject recognition",
+            action='store_true'
+        )
+
+        parser.add_argument(
+            '--webcams',
+            help="Query video devices",
+            action='store_true'
+        )
+        parser.add_argument(
+            '--webcam',
+            help="Video device",
+            default='/dev/video0'
+        )
+
     return parser.parse_args()
 
 
@@ -91,19 +120,57 @@ def main():
     clf.fit(query_params.training_projections, person.ravel())
 
     if args.query is None:
-        acc = 0
-        total = 0
-        for subject in range(1, args.subjects + 1):
-            for image in range(0, args.test_img_per_subject):
-                total += 1
-                image = get_test_faces_for_subject(args, "s%s" % subject)[image]
-                ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-                print(ans, subject)
-                if ans == subject:
-                    acc += 1
 
-        print(float(acc) / total)
+        if WEBCAM_AVAILABLE and args.webcams:
+            pygame.camera.init()
+            for camera in pygame.camera.list_cameras():
+                print("Device found: %s" % camera)
+            exit(0)
+
+        if WEBCAM_AVAILABLE and args.live:
+            # Query the db using the webcam
+            from read_image import DEFAULT_IMAGE_SIZE, resize_and_crop
+            pygame.camera.init()
+            cam = pygame.camera.Camera(args.webcam, )
+
+            try:
+                while True:
+                    cam.start()
+                    input("Press enter to capture an image")
+                    print("Capturing...")
+                    img = cam.get_image()
+                    cam.stop()
+
+                    file, path = tempfile.mkstemp()
+                    pygame.image.save(img, path)
+                    resize_and_crop(path, DEFAULT_IMAGE_SIZE, 'middle')
+
+                    image = get_image(path + ".pgm")
+                    ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
+                    print("Sujeto: " + str(ans))
+
+            except KeyboardInterrupt:
+                print("\nExiting")
+                cam.stop()
+                exit(0)
+
+        else:
+
+            # Query the db using the remaining images
+            acc = 0
+            total = 0
+            for subject in range(1, args.subjects + 1):
+                for image in range(0, args.test_img_per_subject):
+                    total += 1
+                    image = get_test_faces_for_subject(args, "s%s" % subject)[image]
+                    ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
+                    print(ans, subject)
+                    if ans == subject:
+                        acc += 1
+
+            print(float(acc) / total)
     else:
+        # Lets query using an image file
         image = get_image(args.query)
         ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
         print("Sujeto: " + str(ans))

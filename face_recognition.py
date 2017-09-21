@@ -188,13 +188,13 @@ def pca(args):
 
 def kpca(args):
     images = get_training_images(args)
-    test_images = get_test_images(args)
+    # test_images = get_test_images(args)
 
     observations = args.subjects * args.img_per_subject
 
     degree = 2
     ''' Paper eq n° 61 '''
-    K = (np.dot(images, images.T) / observations + 1) ** degree
+    K = (np.dot(images, images.T) + 1) ** degree
 
     ''' Center observations '''
     ''' Paper eq n° 49 '''
@@ -240,7 +240,7 @@ def kpca_query(args, image, clf, query_params: KernelPCAQueryParams):
     ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
 
     ''' Paper eq n° 52 '''
-    K_test = (np.dot([image], query_params.images.T) / query_params.observations + 1) ** query_params.degree
+    K_test = (np.dot([image], query_params.images.T) + 1) ** query_params.degree
 
     ''' Paper eq n° 54 '''
     ones_test_dot_K = np.dot(ones_test, query_params.K)

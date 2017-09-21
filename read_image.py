@@ -5,6 +5,7 @@ from pathlib import Path
 
 DEFAULT_IMAGE_SIZE = [92, 112]
 
+
 def resize_and_crop(img_path, size, crop_type='top'):
     """
     Resize and crop an image to fit the specified size.
@@ -28,10 +29,10 @@ def resize_and_crop(img_path, size, crop_type='top'):
     img_ratio = img.size[0] / float(img.size[1])
     ratio = size[0] / float(size[1])
 
-    #The image is scaled/cropped vertically or horizontally depending on the ratio
+    # The image is scaled/cropped vertically or horizontally depending on the ratio
     if ratio > img_ratio:
         img = img.resize((size[0], size[0] * img.size[1] / img.size[0]),
-                Image.ANTIALIAS)
+                         Image.ANTIALIAS)
         # Crop in the top, middle or bottom
         if crop_type == 'top':
             box = (0, 0, img.size[0], size[1])
@@ -39,12 +40,12 @@ def resize_and_crop(img_path, size, crop_type='top'):
             box = (0, (img.size[1] - size[1]) / 2, img.size[0], (img.size[1] + size[1]) / 2)
         elif crop_type == 'bottom':
             box = (0, img.size[1] - size[1], img.size[0], img.size[1])
-        else :
+        else:
             raise ValueError('ERROR: invalid value for crop_type')
         img = img.crop(box)
     elif ratio < img_ratio:
-        img = img.resize((size[1] * img.size[0] / img.size[1], size[1]),
-                Image.ANTIALIAS)
+        img = img.resize((int(size[1] * img.size[0] / img.size[1]), size[1]),
+                         Image.ANTIALIAS)
         # Crop in the top, middle or bottom
         if crop_type == 'top':
             box = (0, 0, size[0], img.size[1])
@@ -52,12 +53,12 @@ def resize_and_crop(img_path, size, crop_type='top'):
             box = ((img.size[0] - size[0]) / 2, 0, (img.size[0] + size[0]) / 2, img.size[1])
         elif crop_type == 'bottom':
             box = (img.size[0] - size[0], 0, img.size[0], img.size[1])
-        else :
+        else:
             raise ValueError('ERROR: invalid value for crop_type')
         img = img.crop(box)
-    else :
+    else:
         img = img.resize((size[0], size[1]),
-                Image.ANTIALIAS)
+                         Image.ANTIALIAS)
         # If the scale is the same, we do not need to crop
     img = img.convert('RGB')
     img.save(str(img_path) + ".pgm")
@@ -74,5 +75,6 @@ def get_images_from_files():
         resize_and_crop(image, DEFAULT_IMAGE_SIZE, 'middle')
 
     print("Images ready!")
+
 
 get_images_from_files()
