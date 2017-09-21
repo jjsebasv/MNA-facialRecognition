@@ -143,7 +143,10 @@ def get_test_images(args):
     return test_images.reshape((args.subjects * args.test_img_per_subject, PIXELS_H * PIXELS_V))
 
 def get_image(path):
-    return np.asarray(Image.open(path).convert('L'))
+    a = np.asarray(Image.open(path).convert('L'))
+    ''' Descoment this to show the image taken '''
+    #show_image(a)
+    return a
 
 def pca(args):
     images = get_training_images(args)

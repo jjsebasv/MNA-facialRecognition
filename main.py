@@ -30,9 +30,9 @@ IMAGE_DATABASES = [
     'images'
 ]
 
-SUBJECTS = 2
-IMG_PER_SUBJECT = 6
-TEST_IMG_PER_SUBJECT = 4
+SUBJECTS = 5
+IMG_PER_SUBJECT = 9
+TEST_IMG_PER_SUBJECT = 1
 
 
 def parse_args():
@@ -135,9 +135,9 @@ def main():
 
             try:
                 while True:
-                    cam.start()
                     input("Press enter to capture an image")
                     print("Capturing...")
+                    cam.start()
                     img = cam.get_image()
                     cam.stop()
 
@@ -151,7 +151,7 @@ def main():
 
             except KeyboardInterrupt:
                 print("\nExiting")
-                cam.stop()
+                #cam.stop()
                 exit(0)
 
         else:
