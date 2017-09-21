@@ -142,6 +142,8 @@ def get_test_images(args):
 
     return test_images.reshape((args.subjects * args.test_img_per_subject, PIXELS_H * PIXELS_V))
 
+def get_image(path):
+    return np.asarray(Image.open(path).convert('L'))
 
 def pca(args):
     images = get_training_images(args)
@@ -224,15 +226,15 @@ def kpca(args):
     return query_params
 
 
-def pca_query(args, subject, image, clf, query_params: PCAQueryParams):
-    image = np.array(matrix_to_vector(get_test_faces_for_subject(args, "s%s" % subject)[image]))
+def pca_query(args, image, clf, query_params: PCAQueryParams):
+    image = np.array(matrix_to_vector(image))
     diff = image - query_params.average_image
     improy = np.dot([diff], query_params.eigenvectors)
     return clf.predict(improy)
 
 
-def kpca_query(args, subject, image, clf, query_params: KernelPCAQueryParams):
-    image = np.array(matrix_to_vector(get_test_faces_for_subject(args, "s%s" % subject)[image]))
+def kpca_query(args, image, clf, query_params: KernelPCAQueryParams):
+    image = np.array(matrix_to_vector(image))
 
     test_cases = 1
     ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
