@@ -31,7 +31,7 @@ def resize_and_crop(img_path, size, crop_type='top'):
 
     # The image is scaled/cropped vertically or horizontally depending on the ratio
     if ratio > img_ratio:
-        img = img.resize((size[0], size[0] * img.size[1] / img.size[0]),
+        img = img.resize((size[0], int(size[0] * img.size[1] / img.size[0])),
                          Image.ANTIALIAS)
         # Crop in the top, middle or bottom
         if crop_type == 'top':
