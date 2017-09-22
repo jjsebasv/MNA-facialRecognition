@@ -202,3 +202,12 @@ def calculate_eigenvalues(A):
         return get_eigenvalues(eigenvalues), eigenvectors
     else:
         print("Error: You should provide a square matrix")
+
+def subject_name(i):
+    return {
+        1: 'Agustin Mounier',
+        2: 'Noelia Lopez   ',
+        3: 'Joaquin Suarez ',
+        4: 'Sebastian Vera ',
+        5: 'Sebastian Kulesz'
+    }[i]

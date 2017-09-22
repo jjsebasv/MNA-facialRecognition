@@ -147,7 +147,7 @@ def main():
 
                     image = get_image(path + ".pgm")
                     ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-                    print("Sujeto: " + str(ans))
+                    print("Sujeto: " + subject_name(ans[0]))
 
             except KeyboardInterrupt:
                 print("\nExiting")
@@ -164,7 +164,7 @@ def main():
                     total += 1
                     image = get_test_faces_for_subject(args, "s%s" % subject)[image]
                     ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-                    print(ans, subject)
+                    print(subject_name(ans[0]), "\tshould've been\t", subject_name(subject))
                     if ans == subject:
                         acc += 1
 
@@ -173,7 +173,7 @@ def main():
         # Lets query using an image file
         image = get_image(args.query)
         ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-        print("Sujeto: " + str(ans))
+        print("Sujeto: " + subject_name(ans[0]))
 
 
 if __name__ == "__main__":
