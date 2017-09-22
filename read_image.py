@@ -60,7 +60,7 @@ def resize_and_crop(img_path, size, crop_type='top'):
         img = img.resize((size[0], size[1]),
                          Image.ANTIALIAS)
         # If the scale is the same, we do not need to crop
-    img = img.convert('RGB')
+    img.convert('LA').convert('RGB')
     img.save(str(img_path) + ".pgm")
 
 
