@@ -145,7 +145,7 @@ def get_test_images(args):
 def get_image(path):
     a = np.asarray(Image.open(path).convert('L'))
     ''' Descoment this to show the image taken '''
-    #show_image(a)
+    show_image(a)
     return a
 
 def pca(args):
