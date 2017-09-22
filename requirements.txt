@@ -1,0 +1,6 @@
+numpy
+pathlib
+Pillow
+sklearn
+scipy
+pygame

@@ -3,4 +3,6 @@
 TP1 Facial Recognition.iml
 *.pyc
 .DS_Store
-facespca.py 
+facespca.py
+tester.py
+*.data

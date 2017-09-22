@@ -1,147 +1,255 @@
 from pathlib import Path
-from utils import *
-from sklearn import svm
 
-#Subjects
-SUBJECTS = 5
-IMG_PER_SUBJECT = 6
-TEST_IMG_PER_SUBJECT = 4
+from utils import *
+
+# Subjects
+
 PIXELS_H = 92
 PIXELS_V = 112
 
-def get_training_faces(subject):
-    c = 0
-    A, y = [], []
-    images_list = Path("images/"+ subject).glob('**/*.pgm')
 
-    for image in images_list:
-        if c >= IMG_PER_SUBJECT:
+class PCAQueryParams():
+    training_projections = None
+    test_projections = None
+    average_image = None
+    eigenvectors = None
+
+
+class KernelPCAQueryParams(PCAQueryParams):
+    K = None
+    K_test = None
+    observations = None
+    images = None
+    degree = None
+    ones = None
+
+
+def get_training_faces_for_subject(args, subject):
+    """
+    Given a subject get his training faces
+
+    Keyword arguments:
+    subject -- given subject
+    args --
+            img_per_subject
+            imgdb
+            method
+            subjects
+            test_img_per_subject
+    """
+
+    A = []
+    path = "%s/%s" % (args.imgdb, subject)
+    images_list = Path(path).glob('**/*.pgm')
+
+    for i, image in enumerate(images_list):
+        if i >= args.img_per_subject:
             break
         im = np.asarray(Image.open(str(image)).convert('L'))
         A.append(im)
-        y.append(c)
-        c = c + 1
 
-    return [A, y]
+    return A
 
-def get_test_faces(subject):
-    c = 0
-    A, y = [], []
-    images_list = Path("images/"+ subject).glob('**/*.pgm')
 
-    for image in images_list:
-        if c >= IMG_PER_SUBJECT:
+def get_test_faces_for_subject(args, subject):
+    """
+    Given a subject get his test faces
+
+    Keyword arguments:
+    subject -- given subject
+    args --
+            img_per_subject
+            imgdb
+            method
+            subjects
+            test_img_per_subject
+    """
+
+    A = []
+    path = "%s/%s" % (args.imgdb, subject)
+    images_list = Path(path).glob('**/*.pgm')
+
+    for i, image in enumerate(images_list):
+        if i >= args.img_per_subject:
             im = np.asarray(Image.open(str(image)).convert('L'))
             A.append(im)
-            y.append(c)
-        c = c + 1
 
-    return [A, y]
+    return A
 
 
 def average_face_vector(face_vectors):
+    """
+    Given an array of image faces returns the average
+
+    Keyword arguments:
+    face_vectors -- array of images
+    """
+
     dim = np.shape(face_vectors)
     average = np.zeros((1, dim[1]))
     for face_vector in face_vectors:
-        average += face_vector;
-    #average = np.round(average / dim[0]);
+        average += face_vector
     average = average / dim[0]
     return average
 
 
 def calculate_face_vectors(images):
+    """
+    Given an array of images return an array of vectors
+
+    Keyword arguments:
+    images -- array of images
+    """
+
     dim = np.shape(images)
     face_vectors = np.empty((dim[0], dim[1] * dim[2]))
     for i in range(0, dim[0]):
         face_vectors[i] = matrix_to_vector(images[i])
     return face_vectors
 
-def calculate_eienfaces(eigenvectors):
-    eigenfaces = np.empty((IMG_PER_SUBJECT, PIXELS_V, PIXELS_H), dtype="uint8")
-    for i in range(0, np.shape(eigenvectors)[0] - 1):
+
+def calculate_eienfaces(args, eigenvectors):
+    eigenfaces = np.empty((args.img_per_subject, PIXELS_V, PIXELS_H), dtype="uint8")
+    for i in range(0, np.shape(eigenvectors)[0]):
         eigenfaces[i] = vector_to_matix(eigenvectors[i] * 255)
 
     return eigenfaces
 
-def training_set_gamma_vectors():
-    images = np.empty((SUBJECTS, IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
-    for i in range(0, SUBJECTS):
-        [training_faces, y] = get_training_faces("s"+ str(i+1))
 
-        # cada face_vector es de (1, 112*92) = (1, 10304)
-        face_vectors = calculate_face_vectors(training_faces)
-        images[i] = face_vectors
+def get_training_images(args):
+    """
+    Get the training images
+    """
 
-    images = images.reshape((SUBJECTS * IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
+    images = np.empty((args.subjects, args.img_per_subject, PIXELS_H * PIXELS_V))
+    for i in range(0, args.subjects):
+        training_faces = get_training_faces_for_subject(args, "s%d" % (i + 1))
+
+        ''' Each face_vector is (1, 112*92) = (1, 10304)'''
+        images[i] = calculate_face_vectors(training_faces)
+
+    return images.reshape((args.subjects * args.img_per_subject, PIXELS_H * PIXELS_V))
+
+
+def get_test_images(args):
+    test_images = np.empty((args.subjects, args.test_img_per_subject, PIXELS_H * PIXELS_V))
+    for i in range(0, args.subjects):
+        test_faces = get_test_faces_for_subject(args, "s%d" % (i + 1))
+
+        ''' Each face_vector is (1, 112*92) = (1, 10304)'''
+        test_face_vectors = calculate_face_vectors(test_faces)
+        test_images[i] = test_face_vectors
+
+    return test_images.reshape((args.subjects * args.test_img_per_subject, PIXELS_H * PIXELS_V))
+
+def get_image(path):
+    a = np.asarray(Image.open(path).convert('L'))
+    ''' Descoment this to show the image taken '''
+    #show_image(a)
+    return a
+
+def pca(args):
+    images = get_training_images(args)
+
+    ''' Substract the media from every training image '''
     average_face_vect = average_face_vector(images)
     face_vectors_minus_avg = np.empty((images.shape[0], PIXELS_H * PIXELS_V))
     for i in range(images.shape[0]):
         face_vectors_minus_avg[i] = images[i] - average_face_vect
 
-    test_images = np.empty((SUBJECTS, TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
-    for i in range(0, SUBJECTS):
-        [test_faces, y] = get_test_faces("s"+ str(i+1))
+    test_images = get_test_images(args)
 
-        # cada face_vector es de (1, 112*92) = (1, 10304)
-        test_face_vectors = calculate_face_vectors(test_faces)
-        test_images[i] = test_face_vectors
-
-    test_images = test_images.reshape((SUBJECTS * TEST_IMG_PER_SUBJECT, PIXELS_H * PIXELS_V))
-
+    ''' Substract the media from every testing image '''
     test_face_vectors_minus_avg = np.empty((test_images.shape[0], PIXELS_H * PIXELS_V))
     for i in range(test_images.shape[0]):
         test_face_vectors_minus_avg[i] = test_images[i] - average_face_vect
 
-    if (len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]):
+    ''' Calculate eigenvalues and eigenvectors of transpose(A)*A or A*transpose(A) according dimensions '''
+    if len(face_vectors_minus_avg) > face_vectors_minus_avg[0].shape[0]:
+        ''' #Rows > #Columns '''
         Ss = np.matrix(face_vectors_minus_avg).H * np.matrix(face_vectors_minus_avg)
-        (eigenvalues, eigenvectors) = calculate_eigenvalues(Ss)
-    # columnas > filas
+        eigenvalues, eigenvectors = calculate_eigenvalues(Ss)
     else:
+        ''' #Columns > #Rows '''
         Ss = np.matrix(face_vectors_minus_avg) * np.matrix(face_vectors_minus_avg).H
-        (eigenvalues,eigenvectors) = calculate_eigenvalues(Ss)
+        eigenvalues, eigenvectors = calculate_eigenvalues(Ss)
         eigenvectors = face_vectors_minus_avg.transpose() * eigenvectors
         for i in range(face_vectors_minus_avg.shape[0]):
-            eigenvectors[:,i] = eigenvectors[:,i] / np.linalg.norm(eigenvectors[:,i])
-    #
-    # idx = np.argsort(-eigenvalues)
-    # eigenvalues = eigenvalues[idx]
-    # eigenvectors = eigenvectors[:,idx]
-    # eigenvectors = np.reshape(eigenvectors,eigenvectors.shape[0:2])
+            eigenvectors[:, i] = eigenvectors[:, i] / np.linalg.norm(eigenvectors[:, i])
 
-    # U = eigenvectors de a * a.H, V = eigenvectors de a.H * a, S = eigenvalues
-    # algo estamos haciendo mal en el calculate_eigenvalues, deberia poder calular los de eigenvectors de 10304*10304.
+    improy = np.dot(face_vectors_minus_avg, eigenvectors)
+    imtstproy = np.dot(test_face_vectors_minus_avg, eigenvectors)
+
+    query_params = PCAQueryParams()
+    query_params.average_image = average_face_vect
+    query_params.eigenvectors = eigenvectors
+    query_params.training_projections = improy
+    query_params.test_projections = imtstproy
+
+    return query_params
 
 
-    # Esta es la magia que no tenemos que borrar por las dudas
-    #U, S, V = np.linalg.svd(face_vectors_minus_avg, full_matrices=False)
+def kpca(args):
+    images = get_training_images(args)
+    # test_images = get_test_images(args)
 
-    # B = V[0:V.shape[0],:]
-    #proyecto
+    observations = args.subjects * args.img_per_subject
 
-    improy      = np.dot(face_vectors_minus_avg,eigenvectors)
-    imtstproy   = np.dot(test_face_vectors_minus_avg,eigenvectors)
+    degree = 2
+    ''' Paper eq n° 61 '''
+    K = (np.dot(images, images.T) + 1) ** degree
 
-    person      = np.array([[i + 1] * IMG_PER_SUBJECT for i in range(SUBJECTS)])
-    persontst   = np.array([[i + 1] * TEST_IMG_PER_SUBJECT for i in range(SUBJECTS)])
+    ''' Center observations '''
+    ''' Paper eq n° 49 '''
+    ''' http://www.face-rec.org/algorithms/Kernel/kernelPCA_scholkopf.pdf '''
+    ones = np.ones([observations, observations]) / observations
+    K_dot_ones = np.dot(K, ones)
+    K = K - np.dot(ones, K) - K_dot_ones + np.dot(ones, K_dot_ones)
 
-    #SVM
-    #entreno
-    clf = svm.LinearSVC()
-    clf.fit(improy,person.ravel())
-    accs = clf.score(imtstproy,persontst.ravel())
-    # print("Precision "+ str(accs * 100) +"\n")
+    eigenvalues, eigenvectors = calculate_eigenvalues(np.matrix(K))
 
-    return clf, average_face_vect, eigenvectors
+    ''' Eigenvalues come in descending order. We change that '''
+    ''' Taken from Campus eg'''
 
-def calculate_gamma_vectors(eigen_faces, face_vectors_minus_avg):
-    vector_eigenfaces = np.empty((IMG_PER_SUBJECT, PIXELS_H * PIXELS_V), dtype="uint8")
-    for i in range(0, IMG_PER_SUBJECT - 1):
-        vector_eigenfaces[i] = matrix_to_vector(eigen_faces[i])
+    ''' Ordered eigenvalues '''
+    eigenvectors = np.fliplr(eigenvectors)
 
-    return np.dot(face_vectors_minus_avg, np.transpose(vector_eigenfaces))
+    query_params = KernelPCAQueryParams()
+    query_params.eigenvectors = eigenvectors
 
-def parse_query(subject, image, clf, avg_image, V):
-    image = np.array(matrix_to_vector(get_test_faces("s"+str(subject))[0][image]))
-    diff = image - avg_image
-    improy = np.dot([image], V)
+    ''' Paper eq n° 17 '''
+    query_params.training_projections = np.dot(K.T, eigenvectors)
+
+    query_params.images = images
+    query_params.degree = degree
+    query_params.ones = ones
+    query_params.K = K
+    query_params.observations = observations
+
+    return query_params
+
+
+def pca_query(args, image, clf, query_params: PCAQueryParams):
+    image = np.array(matrix_to_vector(image))
+    diff = image - query_params.average_image
+    improy = np.dot([diff], query_params.eigenvectors)
     return clf.predict(improy)
+
+
+def kpca_query(args, image, clf, query_params: KernelPCAQueryParams):
+    image = np.array(matrix_to_vector(image))
+
+    test_cases = 1
+    ones_test = np.ones([test_cases, query_params.observations]) / query_params.observations
+
+    ''' Paper eq n° 52 '''
+    K_test = (np.dot([image], query_params.images.T) + 1) ** query_params.degree
+
+    ''' Paper eq n° 54 '''
+    ones_test_dot_K = np.dot(ones_test, query_params.K)
+    K_test = K_test - ones_test_dot_K - np.dot(K_test, query_params.ones) + np.dot(ones_test_dot_K, query_params.ones)
+
+    ''' Paper eq n° 51 '''
+    imtstproypre = np.dot(K_test, query_params.eigenvectors)
+
+    return clf.predict(imtstproypre)
