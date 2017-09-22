@@ -31,8 +31,8 @@ IMAGE_DATABASES = [
 ]
 
 SUBJECTS = 5
-IMG_PER_SUBJECT = 9
-TEST_IMG_PER_SUBJECT = 1
+IMG_PER_SUBJECT = 6
+TEST_IMG_PER_SUBJECT = 4
 
 
 def parse_args():
@@ -147,7 +147,10 @@ def main():
 
                     image = get_image(path + ".pgm")
                     ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-                    print("Sujeto: " + subject_name(ans[0]))
+                    if args.imgdb == 'images':
+                        print("Sujeto: " + subject_name(ans[0]))
+                    else:
+                        print("Sujeto: " + str(ans))
 
             except KeyboardInterrupt:
                 print("\nExiting")
@@ -164,7 +167,11 @@ def main():
                     total += 1
                     image = get_test_faces_for_subject(args, "s%s" % subject)[image]
                     ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-                    print(subject_name(ans[0]), "\tshould've been\t", subject_name(subject))
+                    if args.imgdb == 'images':
+                        print(subject_name(ans[0]), "\tshould've been\t", subject_name(subject))
+                    else:
+                        print(str(ans), "\tshould've been\t", str(subject))
+
                     if ans == subject:
                         acc += 1
 
@@ -173,7 +180,10 @@ def main():
         # Lets query using an image file
         image = get_image(args.query)
         ans = METHODS[args.method][TEST_FUNCTION](args, image, clf, query_params)
-        print("Sujeto: " + subject_name(ans[0]))
+        if args.imgdb == 'images':
+            print("Sujeto: " + subject_name(ans[0]))
+        else:
+            print("Sujeto: " + str(ans))
 
 
 if __name__ == "__main__":
