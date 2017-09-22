@@ -1,4 +1,4 @@
-## MNA Facil Recognition
+## MNA Face Recognition
 
 Se debe tener Python 3 instalado.
 
